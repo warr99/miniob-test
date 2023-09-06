@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/log_test.dir/log_test.cpp.o -o ../bin/log_test   -L/usr/local/lib  -Wl,-rpath,/usr/local/lib ../lib/libcommon.a -lpthread -ldl -lgtest -lgtest_main ../lib/libobserver.a ../lib/libcommon.a -lpthread -ldl /usr/local/lib/libevent_pthreads.a /usr/local/lib/libevent_core.a -Wl,-Bstatic -ljsoncpp -Wl,-Bdynamic 

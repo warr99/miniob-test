@@ -1,0 +1,15 @@
+{
+	"fields" : 
+	[
+		{
+			"len" : 4,
+			"name" : "col",
+			"offset" : 0,
+			"type" : "chars",
+			"visible" : true
+		}
+	],
+	"indexes" : null,
+	"table_id" : 4,
+	"table_name" : "t2"
+}

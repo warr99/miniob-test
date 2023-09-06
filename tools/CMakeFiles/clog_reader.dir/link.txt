@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/clog_reader.dir/clog_reader_cmd.cpp.o -o ../bin/clog_reader   -L/usr/local/lib  -Wl,-rpath,/usr/local/lib: ../lib/libobserver.a ../lib/libcommon.a -lpthread -ldl /usr/local/lib/libevent_pthreads.a /usr/local/lib/libevent_core.a -Wl,-Bstatic -ljsoncpp -Wl,-Bdynamic 

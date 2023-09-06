@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/obclient.dir/client.cpp.o -o ../../bin/obclient   -L/usr/local/lib  -Wl,-rpath,/usr/local/lib: ../../lib/libcommon.a -lpthread -ldl 

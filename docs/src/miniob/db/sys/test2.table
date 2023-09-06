@@ -1,0 +1,15 @@
+{
+	"fields" : 
+	[
+		{
+			"len" : 4,
+			"name" : "col",
+			"offset" : 0,
+			"type" : "ints",
+			"visible" : true
+		}
+	],
+	"indexes" : null,
+	"table_id" : 2,
+	"table_name" : "test2"
+}
