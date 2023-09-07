@@ -3,13 +3,20 @@
 	[
 		{
 			"len" : 4,
-			"name" : "col1",
+			"name" : "id",
 			"offset" : 0,
+			"type" : "ints",
+			"visible" : true
+		},
+		{
+			"len" : 4,
+			"name" : "age",
+			"offset" : 4,
 			"type" : "ints",
 			"visible" : true
 		}
 	],
 	"indexes" : null,
-	"table_id" : 3,
+	"table_id" : 5,
 	"table_name" : "t"
 }
