@@ -61,7 +61,8 @@ class AttrComparator {
 
     int operator()(const char* v1, const char* v2) const {
         switch (attr_type_) {
-            case INTS: {
+            case INTS:
+            case DATES: {
                 return common::compare_int((void*)v1, (void*)v2);
             } break;
             case FLOATS: {
@@ -449,7 +450,7 @@ class BplusTreeHandler {
     RC open(const char* file_name);
 
     RC drop();
-    
+
     /**
      * 关闭句柄indexHandle对应的索引文件
      */

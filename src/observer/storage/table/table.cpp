@@ -83,6 +83,7 @@ RC Table::create(int32_t table_id,
     close(fd);
 
     // 创建文件
+    // 初始化 table 元数据
     if ((rc = table_meta_.init(table_id, name, attribute_count, attributes)) != RC::SUCCESS) {
         LOG_ERROR("Failed to init table meta. name:%s, ret:%d", name, rc);
         return rc;  // delete table file
@@ -98,15 +99,16 @@ RC Table::create(int32_t table_id,
     // 记录元数据到文件中
     table_meta_.serialize(fs);
     fs.close();
-
+    // 构建数据文件的路径
     std::string data_file = table_data_file(base_dir, name);
+    // 获取缓冲池管理器的实例
     BufferPoolManager& bpm = BufferPoolManager::instance();
-    rc = bpm.create_file(data_file.c_str());
+    rc = bpm.create_file(data_file.c_str());  // 创建数据文件并将其添加到缓冲池
     if (rc != RC::SUCCESS) {
         LOG_ERROR("Failed to create disk buffer pool of data file. file name=%s", data_file.c_str());
         return rc;
     }
-
+    // 初始化记录处理器
     rc = init_record_handler(base_dir);
     if (rc != RC::SUCCESS) {
         LOG_ERROR("Failed to create table %s due to init record handler failed.", data_file.c_str());
@@ -283,6 +285,9 @@ RC Table::make_record(int value_num, const Value* values, Record& record) {
         const FieldMeta* field = table_meta_.field(i + normal_field_start_index);
         const Value& value = values[i];
         if (field->type() != value.attr_type()) {
+            if (field->type() == DATES && value.attr_type() == INTS) {
+                continue;
+            }
             LOG_ERROR("Invalid value type. table name =%s, field name=%s, type=%d, but given=%d",
                       table_meta_.name(), field->name(), field->type(), value.attr_type());
             return RC::SCHEMA_FIELD_TYPE_MISMATCH;
