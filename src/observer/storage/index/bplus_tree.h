@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
+#include <common/util/date.h>
 #include <string.h>
 #include <functional>
 #include <memory>
@@ -61,8 +62,14 @@ class AttrComparator {
 
     int operator()(const char* v1, const char* v2) const {
         switch (attr_type_) {
-            case INTS:
             case DATES: {
+                int date1 = -1;
+                string_to_date(v1, date1);
+                int date2 = -1;
+                string_to_date(v2, date2);
+                return common::compare_int((void*)&date1, (void*)&date2);
+            } break;
+            case INTS: {
                 return common::compare_int((void*)v1, (void*)v2);
             } break;
             case FLOATS: {
