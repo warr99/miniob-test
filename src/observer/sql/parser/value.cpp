@@ -109,7 +109,7 @@ void Value::set_value(const Value& value) {
             int date = -1;
             string_to_date(value.get_string().c_str(), date);
             set_int(date);
-        }break;
+        } break;
         case INTS: {
             set_int(value.get_int());
         } break;
@@ -194,6 +194,11 @@ int Value::compare(const Value& other) const {
     } else if (this->attr_type_ == FLOATS && other.attr_type_ == INTS) {
         float other_data = other.num_value_.int_value_;
         return common::compare_float((void*)&this->num_value_.float_value_, (void*)&other_data);
+    } else if (this->attr_type_ == DATES && other.attr_type_ == CHARS) {
+        int this_data = this->num_value_.int_value_;
+        int date = -1;
+        string_to_date(other.get_string().c_str(), date);
+        return common::compare_int((void*)&this_data, (void*)&date);
     }
     LOG_WARN("not supported");
     return -1;  // TODO return rc?
