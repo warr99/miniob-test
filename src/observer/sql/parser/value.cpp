@@ -102,13 +102,15 @@ void Value::set_string(const char* s, int len /*= 0*/) {
     }
     length_ = str_value_.length();
 }
-
+void Value::set_date(int32_t date) {
+    attr_type_ = DATES;
+    num_value_.int_value_ = date;
+    length_ = sizeof(date);
+}
 void Value::set_value(const Value& value) {
     switch (value.attr_type_) {
         case DATES: {
-            int date = -1;
-            string_to_date(value.get_string().c_str(), date);
-            set_int(date);
+            set_date(value.get_int());
         } break;
         case INTS: {
             set_int(value.get_int());
@@ -169,7 +171,8 @@ std::string Value::to_string() const {
 int Value::compare(const Value& other) const {
     if (this->attr_type_ == other.attr_type_) {
         switch (this->attr_type_) {
-            case INTS: {
+            case INTS: 
+            case DATES:{
                 return common::compare_int((void*)&this->num_value_.int_value_, (void*)&other.num_value_.int_value_);
             } break;
             case FLOATS: {
@@ -298,4 +301,25 @@ bool Value::get_boolean() const {
         }
     }
     return false;
+}
+
+int Value::get_date() const {
+  switch (attr_type_)
+  {
+  case INTS: case DATES: {
+    return num_value_.int_value_;
+  }break;
+  case CHARS: {
+    int32_t date = -1;
+    RC rc = string_to_date(str_value_.c_str(), date);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("Failed to convert data type. str=%s, target_type=%s", str_value_, "DATES");
+    }
+    return date;
+  }break;
+  default: {
+      LOG_WARN("unknown data type. type=%d", attr_type_);
+      return 0;
+  }break;
+  }
 }

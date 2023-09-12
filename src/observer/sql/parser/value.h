@@ -65,6 +65,7 @@ class Value {
     void set_boolean(bool val);
     void set_string(const char* s, int len = 0);
     void set_value(const Value& value);
+    void set_date(int date);
 
     std::string to_string() const;
 
@@ -89,6 +90,7 @@ class Value {
     std::string get_string() const;
     bool get_boolean() const;
     void value_destory(Value* value);
+    int get_date() const;
 
    private:
     AttrType attr_type_ = UNDEFINED;

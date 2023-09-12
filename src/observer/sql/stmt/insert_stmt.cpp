@@ -65,7 +65,7 @@ RC InsertStmt::create(Db* db, const InsertSqlNode& inserts, Stmt*& stmt) {
                 }
                 // TODO
                 Value* value = const_cast<Value*>(&inserts.values[i]);
-                value->set_int(date);
+                value->set_date(date);
             } else {
                 LOG_WARN("field type mismatch. table=%s, field=%s, field type=%d, value_type=%d",
                          table_name, field_meta->name(), field_type, value_type);
