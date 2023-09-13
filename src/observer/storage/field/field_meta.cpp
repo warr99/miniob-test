@@ -68,8 +68,7 @@ AttrType FieldMeta::type() const
 }
 
 int FieldMeta::offset() const
-{
-  return attr_offset_;
+{  return attr_offset_;
 }
 
 int FieldMeta::len() const

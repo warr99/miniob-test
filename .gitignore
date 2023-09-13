@@ -25,4 +25,6 @@ GRTAGS
 GPATH
 GTAGS
 docs/book
-#*#
+./.vscode
+observe.log.*
+observe.log.*

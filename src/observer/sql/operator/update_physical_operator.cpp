@@ -1,25 +1,11 @@
-/* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
-miniob is licensed under Mulan PSL v2.
-You can use this software according to the terms and conditions of the Mulan PSL v2.
-You may obtain a copy of Mulan PSL v2 at:
-         http://license.coscl.org.cn/MulanPSL2
-THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-See the Mulan PSL v2 for more details. */
-
-//
-// Created by WangYunlai on 2022/6/27.
-//
-
-#include "sql/operator/delete_physical_operator.h"
-#include "common/log/log.h"
-#include "sql/stmt/delete_stmt.h"
-#include "storage/record/record.h"
+#include "sql/operator/update_physical_operator.h"
+#include "sql/stmt/update_stmt.h"
 #include "storage/table/table.h"
 #include "storage/trx/trx.h"
 
-RC DeletePhysicalOperator::open(Trx* trx) {
+using namespace std;
+
+RC UpdatePhysicalOperator::open(Trx* trx) {
     if (children_.empty()) {
         return RC::SUCCESS;
     }
@@ -36,7 +22,7 @@ RC DeletePhysicalOperator::open(Trx* trx) {
     return RC::SUCCESS;
 }
 
-RC DeletePhysicalOperator::next() {
+RC UpdatePhysicalOperator::next() {
     RC rc = RC::SUCCESS;
     if (children_.empty()) {
         return RC::RECORD_EOF;
@@ -52,17 +38,30 @@ RC DeletePhysicalOperator::next() {
 
         RowTuple* row_tuple = static_cast<RowTuple*>(tuple);
         Record& record = row_tuple->record();
-        rc = trx_->delete_record(table_, record);
+        if (*field_name_ == 0) {
+            rc = RC::EMPTY;
+            return rc;
+        }
+        const FieldMeta* feildmeta = table_->table_meta().field(field_name_);
+        if (feildmeta == nullptr)
+        {
+            rc = RC::EMPTY;
+            return rc;
+        }
+        
+
+        int offset = feildmeta->offset();
+
+        rc = trx_->update_record(table_, record, value_, offset);
         if (rc != RC::SUCCESS) {
             LOG_WARN("failed to delete record: %s", strrc(rc));
             return rc;
         }
     }
-
     return RC::RECORD_EOF;
 }
 
-RC DeletePhysicalOperator::close() {
+RC UpdatePhysicalOperator::close() {
     if (!children_.empty()) {
         children_[0]->close();
     }
