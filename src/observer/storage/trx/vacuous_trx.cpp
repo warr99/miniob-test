@@ -57,7 +57,7 @@ RC VacuousTrx::visit_record(Table* table, Record& record, bool readonly) {
 }
 
 RC VacuousTrx::update_record(Table* table, Record& record, Value& value, int offset) {
-    return RC::SUCCESS;
+    return table->update_record(record, value, offset);
 }
 
 RC VacuousTrx::start_if_need() {

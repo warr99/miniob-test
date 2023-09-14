@@ -8,7 +8,7 @@
  */
 class UpdateLogicalOperator : public LogicalOperator {
    public:
-    UpdateLogicalOperator(Table* table, Value* value, const char* field_name);
+    UpdateLogicalOperator(Table* table, Value& value, const char* field_name);
     virtual ~UpdateLogicalOperator() = default;
 
     LogicalOperatorType type() const override {
@@ -17,8 +17,8 @@ class UpdateLogicalOperator : public LogicalOperator {
     Table* table() const {
         return table_;
     }
-    Value* value() const {
-        return value_;
+    Value* value() {
+        return &value_;
     }
 
     const char* field_name() const {
@@ -27,6 +27,6 @@ class UpdateLogicalOperator : public LogicalOperator {
 
    private:
     Table* table_ = nullptr;
-    Value* value_ = nullptr;
-    const char* field_name_ = nullptr;
+    Value value_;
+    char* field_name_ = nullptr;
 };

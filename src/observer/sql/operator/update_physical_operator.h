@@ -11,19 +11,17 @@ class DeleteStmt;
  */
 class UpdatePhysicalOperator : public PhysicalOperator {
    public:
-    UpdatePhysicalOperator(Table* table, Value& value, const char* field_name) {
-        table_ = table;
-        value_ = value;
-        char* tmp = (char*)malloc(sizeof(char) * (strlen(field_name) + 1));
-        strcpy(tmp, field_name);
-        field_name_ = tmp;
+    UpdatePhysicalOperator(Table* table, Value& value, const char* field_name)
+        : table_(table), value_(value) {
+        // 复制 field_name
+        field_name_ = new char[strlen(field_name) + 1];
+        strcpy(field_name_, field_name);
     }
 
-    virtual ~UpdatePhysicalOperator() {
-        if (field_name_ != nullptr) {
-            free(field_name_);
-        }
-    };
+    // 析构函数
+    ~UpdatePhysicalOperator() {
+        delete[] field_name_;  // 释放 field_name 的内存
+    }
 
     PhysicalOperatorType type() const override {
         return PhysicalOperatorType::UPDATE;

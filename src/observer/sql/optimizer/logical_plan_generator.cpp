@@ -217,7 +217,7 @@ RC LogicalPlanGenerator::create_plan(UpdateStmt* update_stmt, unique_ptr<Logical
         return rc;
     }
     // 创建一个名为 update_oper 的逻辑操作符，用于表示更新操作。
-    unique_ptr<LogicalOperator> update_oper(new UpdateLogicalOperator(table, update_stmt->values(), update_stmt->attribute_name().c_str()));
+    unique_ptr<LogicalOperator> update_oper(new UpdateLogicalOperator(table, *update_stmt->values(), update_stmt->attribute_name().c_str()));
     if (predicate_oper) {
         // 如果存在查询过滤条件
         predicate_oper->add_child(std::move(table_get_oper));
