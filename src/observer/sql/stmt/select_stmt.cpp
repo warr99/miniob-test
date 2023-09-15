@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/select_stmt.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
+#include "sql/fun/max_func.h"
 #include "sql/stmt/filter_stmt.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
@@ -26,11 +27,35 @@ SelectStmt::~SelectStmt() {
     }
 }
 
-static void wildcard_fields(Table* table, std::vector<Field>& field_metas) {
+AggregationFunc* create_func(const char* func_name) {
+    FuncType type = stringToFuncType(func_name);
+    switch (type) {
+        case FuncType::FUNC_MAX: {
+            return new MaxFunc();
+        }
+        case FuncType::FUNC_MIN: {
+            break;
+        }
+        case FuncType::FUNC_COUNT: {
+            break;
+        }
+        case FuncType::FUNC_AVG: {
+            break;
+        }
+        default:
+            return new AggregationFunc();
+    }
+    return new AggregationFunc();
+}
+
+static void wildcard_fields(Table* table, std::vector<Field>& field_metas, const char* func_name) {
     const TableMeta& table_meta = table->table_meta();
     const int field_num = table_meta.field_num();
     for (int i = table_meta.sys_field_num(); i < field_num; i++) {
-        field_metas.push_back(Field(table, table_meta.field(i)));
+        // 如果是" select * " 意味着没有使用聚合函数
+        AggregationFunc* func = create_func(func_name);
+        field_metas.push_back(Field(table, table_meta.field(i), *func));
+        delete func;
     }
 }
 
@@ -57,27 +82,27 @@ RC SelectStmt::create(Db* db, const SelectSqlNode& select_sql, Stmt*& stmt) {
             LOG_WARN("no such table. db=%s, table_name=%s", db->name(), table_name);
             return RC::SCHEMA_TABLE_NOT_EXIST;
         }
-                                                                                                  
+
         tables.push_back(table);
         table_map.insert(std::pair<std::string, Table*>(table_name, table));
     }
 
-    // collect query fields in `select` statement                                                         
+    // collect query fields in `select` statement 从 select 里面收集字段名
     std::vector<Field> query_fields;
     for (int i = static_cast<int>(select_sql.attributes.size()) - 1; i >= 0; i--) {
         const RelAttrSqlNode& relation_attr = select_sql.attributes[i];
-
 
         // 将 "*" 展开成所有表字段
         if (common::is_blank(relation_attr.relation_name.c_str()) &&
             0 == strcmp(relation_attr.attribute_name.c_str(), "*")) {
             for (Table* table : tables) {
-                wildcard_fields(table, query_fields);
+                wildcard_fields(table, query_fields, relation_attr.aggregation_func.c_str());
             }
 
         } else if (!common::is_blank(relation_attr.relation_name.c_str())) {
             const char* table_name = relation_attr.relation_name.c_str();
             const char* field_name = relation_attr.attribute_name.c_str();
+            const char* func_name = relation_attr.aggregation_func.c_str();
 
             if (0 == strcmp(table_name, "*")) {
                 if (0 != strcmp(field_name, "*")) {
@@ -103,8 +128,10 @@ RC SelectStmt::create(Db* db, const SelectSqlNode& select_sql, Stmt*& stmt) {
                         LOG_WARN("no such field. field=%s.%s.%s", db->name(), table->name(), field_name);
                         return RC::SCHEMA_FIELD_MISSING;
                     }
-
-                    query_fields.push_back(Field(table, field_meta));
+                    // TODO
+                    AggregationFunc* func = create_func(func_name);
+                    query_fields.push_back(Field(table, field_meta, *func));
+                    delete func;
                 }
             }
         } else {
@@ -120,8 +147,9 @@ RC SelectStmt::create(Db* db, const SelectSqlNode& select_sql, Stmt*& stmt) {
                 LOG_WARN("no such field. field=%s.%s.%s", db->name(), table->name(), relation_attr.attribute_name.c_str());
                 return RC::SCHEMA_FIELD_MISSING;
             }
-
-            query_fields.push_back(Field(table, field_meta));
+            AggregationFunc* func = create_func(relation_attr.aggregation_func.c_str());
+            query_fields.push_back(Field(table, field_meta, *func));
+            delete func;
         }
     }
 

@@ -344,6 +344,8 @@ type:
     | DATE_T  { $$=DATES; }
     ;
 insert_stmt:        /*insert   语句的语法解析树*/
+    /*INSERT INTO ID VALUES { value value_list }*/
+    // (1, 2, 3, 4)
     INSERT INTO ID VALUES LBRACE value value_list RBRACE 
     {
       $$ = new ParsedSqlNode(SCF_INSERT);
@@ -417,20 +419,26 @@ update_stmt:      /*  update 语句的语法解析树*/
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
+    /*1    2           3    4  5        6   */
     SELECT select_attr FROM ID rel_list where
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
+      /* 如果非空，则表示查询中有指定的属性列表 */
       if ($2 != nullptr) {
+        /* 存在属性列表，则将属性列表从 $2 转移到查询节点 $$ 中，并交换指针以避免不必要的复制 */
         $$->selection.attributes.swap(*$2);
         delete $2;
       }
+      /* 如果非空，则表示查询中有指定的表格列表 */
       if ($5 != nullptr) {
         $$->selection.relations.swap(*$5);
         delete $5;
       }
+      /* 将查询中的主表格（ID）添加到表格列表中 */
       $$->selection.relations.push_back($4);
+      /* 反转表格列表的顺序，以确保正确的连接顺序 */
       std::reverse($$->selection.relations.begin(), $$->selection.relations.end());
-
+      /* 检查 where 是否非空，如果非空，则表示查询中有指定的条件表达式 */
       if ($6 != nullptr) {
         $$->selection.conditions.swap(*$6);
         delete $6;
@@ -522,6 +530,28 @@ rel_attr:
       $$->attribute_name = $3;
       free($1);
       free($3);
+    }
+    // max (    id      )
+    | ID LBRACE ID RBRACE {
+      $$ = new RelAttrSqlNode;
+      // 设置聚合函数的名称
+      $$->aggregation_func = $1;
+      $$->attribute_name = $3;
+      // relation_name 保持为空字符串
+      $$->relation_name = "";
+      free($1);
+      free($3);
+    }
+    //t0 .  max   (    id     )
+    | ID DOT ID LBRACE ID RBRACE {
+      $$ = new RelAttrSqlNode;
+      $$->relation_name  = $1;
+      $$->attribute_name = $3;
+      // 设置聚合函数的名称
+      $$->aggregation_func = $5;
+      free($1);
+      free($3);
+      free($5);
     }
     ;
 

@@ -63,4 +63,5 @@ inline RC date_to_string(int date, char* str) {
         return RC::INVALID_ARGUMENT;
     }
     sprintf(str, "%04d-%02d-%02d", year, month, day);
+    return RC::SUCCESS;
 }

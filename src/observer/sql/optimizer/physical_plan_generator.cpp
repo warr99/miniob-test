@@ -68,7 +68,6 @@ RC PhysicalPlanGenerator::create(LogicalOperator& logical_operator, unique_ptr<P
         } break;
 
         case LogicalOperatorType::UPDATE: {
-            // TODO
             return create_plan(static_cast<UpdateLogicalOperator&>(logical_operator), oper);
         } break;
 

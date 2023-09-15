@@ -14,59 +14,71 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
-#include "storage/table/table.h"
+#include "sql/fun/aggregation_func.h"
 #include "storage/field/field_meta.h"
+#include "storage/table/table.h"
 
 /**
  * @brief 字段
- * 
+ *
  */
-class Field 
-{
-public:
-  Field() = default;
-  Field(const Table *table, const FieldMeta *field) : table_(table), field_(field)
-  {}
-  Field(const Field &) = default;
+class Field {
+   public:
+    Field() = default;
+    Field(const Table* table, const FieldMeta* field, const AggregationFunc& func)
+        : table_(table), field_(field), func_(func) {}
 
-  const Table *table() const
-  {
-    return table_;
-  }
-  const FieldMeta *meta() const
-  {
-    return field_;
-  }
+    Field(const Table* table, const FieldMeta* field)
+        : table_(table), field_(field) {
+    }
+    Field(const Field&) = default;
 
-  AttrType attr_type() const
-  {
-    return field_->type();
-  }
+    Field& operator=(const Field& other) {
+        if (this != &other) {  // 避免自赋值
+            // 执行合适的赋值操作
+            this->table_ = other.table_;
+            this->field_ = other.field_;
+            // 在这里添加其他赋值操作
+        }
+        return *this;
+    }
 
-  const char *table_name() const
-  {
-    return table_->name();
-  }
-  const char *field_name() const
-  {
-    return field_->name();
-  }
+    const Table* table() const {
+        return table_;
+    }
+    const FieldMeta* meta() const {
+        return field_;
+    }
 
-  void set_table(const Table *table)
-  {
-    this->table_ = table;
-  }
-  void set_field(const FieldMeta *field)
-  {
-    this->field_ = field;
-  }
+    const AggregationFunc& func() const {
+        return func_;
+    }
 
-  void set_int(Record &record, int value);
-  int  get_int(const Record &record);
+    AttrType attr_type() const {
+        return field_->type();
+    }
 
-  const char *get_data(const Record &record);
+    const char* table_name() const {
+        return table_->name();
+    }
+    const char* field_name() const {
+        return field_->name();
+    }
 
-private:
-  const Table *table_ = nullptr;
-  const FieldMeta *field_ = nullptr;
+    void set_table(const Table* table) {
+        this->table_ = table;
+    }
+    void set_field(const FieldMeta* field) {
+        this->field_ = field;
+    }
+
+    void set_int(Record& record, int value);
+    int get_int(const Record& record);
+
+    const char* get_data(const Record& record);
+
+   private:
+    const Table* table_ = nullptr;
+    const FieldMeta* field_ = nullptr;
+    const AggregationFunc func_;
 };
