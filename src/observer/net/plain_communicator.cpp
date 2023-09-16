@@ -197,10 +197,28 @@ RC PlainCommunicator::write_result_internal(SessionEvent* event, bool& need_disc
                     return rc;
                 }
             }
-            if (func->getType() == FuncType::FUNC_COUNT && cell_num > 1) {
-                rc = writer_->writen("COUNT(*)", strlen("COUNT(*)"));
-                break;
+            if (func != nullptr) {
+                if (func->getType() == FuncType::FUNC_COUNT && cell_num > 1) {
+                    rc = writer_->writen("COUNT(*)", strlen("COUNT(*)"));
+                    break;
+                }
+                if (func->getType() == FuncType::FUNC_MAX && cell_num > 1) {
+                    rc = RC::IOERR_WRITE;
+                }
+                if (func->getType() == FuncType::FUNC_MIN && cell_num > 1) {
+                    rc = RC::IOERR_WRITE;
+                }
+                if (func->getType() == FuncType::FUNC_AVG && cell_num > 1) {
+                    rc = RC::IOERR_WRITE;
+                }
+                if (OB_FAIL(rc)) {
+                    need_disconnect = false;
+                    sql_result->close();
+                    sql_result->set_return_code(rc);
+                    return write_state(event, need_disconnect);
+                }
             }
+
             int len = strlen(alias);
             rc = writer_->writen(alias, len);
             if (OB_FAIL(rc)) {
