@@ -76,7 +76,7 @@ RC ExecuteStage::handle_request_with_physical_operator(SQLStageEvent* sql_event)
 
             for (const Field& field : select_stmt->query_fields()) {
                 std::string alias = field.field_name();
-                if (field.func() != nullptr || field.func()->getType() != FuncType::FUNC_UNDIFINED) {
+                if (field.func() != nullptr && field.func()->getType() != FuncType::FUNC_UNDIFINED) {
                     alias = funcTypeToString(field.func()->getType()) + "(" + field.field_name() + ")";
                 }
                 if (with_table_name) {

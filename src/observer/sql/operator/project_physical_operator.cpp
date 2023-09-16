@@ -53,7 +53,7 @@ Tuple* ProjectPhysicalOperator::current_tuple() {
 
 void ProjectPhysicalOperator::add_projection(const Table* table, const FieldMeta* field_meta, const AggregationFunc* func) {
     std::string alias = field_meta->name();
-    if (func != nullptr || func->getType() != FuncType::FUNC_UNDIFINED) {
+    if (func != nullptr && func->getType() != FuncType::FUNC_UNDIFINED) {
         alias = funcTypeToString(func->getType()) + "(" + field_meta->name() + ")";
     }
     // 对单表来说，展示的(alias) 字段总是字段名称，
