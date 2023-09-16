@@ -186,9 +186,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent* event, bool& need_disc
     for (int i = 0; i < cell_num; i++) {
         const TupleCellSpec& spec = schema.cell_at(i);
         func = spec.func();
-        if (func != nullptr && func->getType() != FuncType::FUNC_UNDIFINED) {
-            break;
-        }
+
         const char* alias = spec.alias();
         if (nullptr != alias || alias[0] != 0) {
             if (0 != i) {
@@ -199,7 +197,10 @@ RC PlainCommunicator::write_result_internal(SessionEvent* event, bool& need_disc
                     return rc;
                 }
             }
-
+            if (func->getType() == FuncType::FUNC_COUNT && cell_num > 1) {
+                rc = writer_->writen("COUNT(*)", strlen("COUNT(*)"));
+                break;
+            }
             int len = strlen(alias);
             rc = writer_->writen(alias, len);
             if (OB_FAIL(rc)) {
@@ -210,7 +211,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent* event, bool& need_disc
         }
     }
 
-    if (cell_num > 0 && (func == nullptr || func->getType() == FuncType::FUNC_UNDIFINED)) {
+    if (cell_num > 0) {
         char newline = '\n';
         rc = writer_->writen(&newline, 1);
         if (OB_FAIL(rc)) {

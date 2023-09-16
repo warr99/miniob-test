@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "sql/operator/project_physical_operator.h"
 #include "common/log/log.h"
+#include "sql/fun/aggregation_func.h"
 #include "storage/record/record.h"
 #include "storage/table/table.h"
 
@@ -50,9 +51,13 @@ Tuple* ProjectPhysicalOperator::current_tuple() {
     return &tuple_;
 }
 
-void ProjectPhysicalOperator::add_projection(const Table* table, const FieldMeta* field_meta,const AggregationFunc* func) {
+void ProjectPhysicalOperator::add_projection(const Table* table, const FieldMeta* field_meta, const AggregationFunc* func) {
+    std::string alias = field_meta->name();
+    if (func != nullptr || func->getType() != FuncType::FUNC_UNDIFINED) {
+        alias = funcTypeToString(func->getType()) + "(" + field_meta->name() + ")";
+    }
     // 对单表来说，展示的(alias) 字段总是字段名称，
     // 对多表查询来说，展示的alias 需要带表名字
-    TupleCellSpec* spec = new TupleCellSpec(table->name(), field_meta->name(), field_meta->name(), func);
+    TupleCellSpec* spec = new TupleCellSpec(table->name(), field_meta->name(), alias.c_str(), func);
     tuple_.add_cell_spec(spec);
 }

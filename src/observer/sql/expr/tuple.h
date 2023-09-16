@@ -53,10 +53,10 @@ class TupleSchema {
     void append_cell(const TupleCellSpec& cell) {
         cells_.push_back(cell);
     }
-    void append_cell(const char* table, const char* field) {
-        append_cell(TupleCellSpec(table, field));
+    void append_cell(const char* table, const char* field, const AggregationFunc* func) {
+        append_cell(TupleCellSpec(table, field, field, func));
     }
-    void append_cell(const char* alias,const AggregationFunc* func) {
+    void append_cell(const char* alias, const AggregationFunc* func) {
         append_cell(TupleCellSpec(alias, func));
     }
     int cell_num() const {

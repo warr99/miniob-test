@@ -41,3 +41,20 @@ FuncType stringToFuncType(const std::string& str) {
         return FuncType::FUNC_UNDIFINED;
     }
 }
+
+std::string funcTypeToString(FuncType funcType) {
+    static std::map<FuncType, std::string> funcTypeStringMap = {
+        {FuncType::FUNC_MAX, "MAX"},
+        {FuncType::FUNC_MIN, "MIN"},
+        {FuncType::FUNC_COUNT, "COUNT"},
+        {FuncType::FUNC_AVG, "AVG"},
+        {FuncType::FUNC_UNDIFINED, "UNDIFINED"}};
+
+    auto it = funcTypeStringMap.find(funcType);
+    if (it != funcTypeStringMap.end()) {
+        return it->second;
+    } else {
+        // 处理无效的FuncType值，例如抛出异常或返回默认字符串
+        return "INVALID";
+    }
+}

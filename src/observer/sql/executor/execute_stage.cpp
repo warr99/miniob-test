@@ -24,6 +24,7 @@ See the Mulan PSL v2 for more details. */
 #include "session/session.h"
 #include "sql/executor/command_executor.h"
 #include "sql/operator/calc_physical_operator.h"
+#include "sql/operator/project_physical_operator.h"
 #include "sql/stmt/select_stmt.h"
 #include "sql/stmt/stmt.h"
 #include "storage/default/default_handler.h"
@@ -68,14 +69,20 @@ RC ExecuteStage::handle_request_with_physical_operator(SQLStageEvent* sql_event)
     TupleSchema schema;
     switch (stmt->type()) {
         case StmtType::SELECT: {
+            ProjectPhysicalOperator* proj_operator = static_cast<ProjectPhysicalOperator*>(physical_operator.get());
+            // proj_operator->current_tuple()
             SelectStmt* select_stmt = static_cast<SelectStmt*>(stmt);
             bool with_table_name = select_stmt->tables().size() > 1;
 
             for (const Field& field : select_stmt->query_fields()) {
+                std::string alias = field.field_name();
+                if (field.func() != nullptr || field.func()->getType() != FuncType::FUNC_UNDIFINED) {
+                    alias = funcTypeToString(field.func()->getType()) + "(" + field.field_name() + ")";
+                }
                 if (with_table_name) {
-                    schema.append_cell(field.table_name(), field.field_name());
+                    schema.append_cell(field.table_name(), alias.c_str(), field.func());
                 } else {
-                    schema.append_cell(field.field_name(),field.func());
+                    schema.append_cell(alias.c_str(), field.func());
                 }
             }
         } break;

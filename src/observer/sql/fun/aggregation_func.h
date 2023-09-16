@@ -1,13 +1,12 @@
 #pragma once
 
+#include <cctype>
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include "common/rc.h"
 #include "sql/parser/value.h"
-#include <cctype>
-#include <string>
 
 enum class FuncType {
     FUNC_MAX,    // 默认值为0
@@ -18,6 +17,7 @@ enum class FuncType {
 };
 
 FuncType stringToFuncType(const std::string& str);
+std::string funcTypeToString(FuncType funcType);
 
 class AggregationFunc {
    protected:
