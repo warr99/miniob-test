@@ -22,8 +22,7 @@ See the Mulan PSL v2 for more details. */
 class TupleCellSpec {
    public:
     TupleCellSpec(const char* table_name, const char* field_name, const char* alias = nullptr,const AggregationFunc* func = nullptr);
-    TupleCellSpec(const char* alias, const AggregationFunc* func);
-    TupleCellSpec(const char* alias);
+    TupleCellSpec(const char* alias, const AggregationFunc* func  = nullptr);
 
     const char* table_name() const {
         return table_name_.c_str();

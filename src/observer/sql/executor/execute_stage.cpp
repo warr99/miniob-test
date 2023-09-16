@@ -83,7 +83,7 @@ RC ExecuteStage::handle_request_with_physical_operator(SQLStageEvent* sql_event)
         case StmtType::CALC: {
             CalcPhysicalOperator* calc_operator = static_cast<CalcPhysicalOperator*>(physical_operator.get());
             for (const unique_ptr<Expression>& expr : calc_operator->expressions()) {
-                schema.append_cell(expr->name().c_str());
+                schema.append_cell(TupleCellSpec(expr->name().c_str()));
             }
         } break;
 

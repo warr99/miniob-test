@@ -66,9 +66,3 @@ TupleCellSpec::TupleCellSpec(const char* alias, const AggregationFunc* func) {
         func_ = func;
     }
 }
-
-TupleCellSpec::TupleCellSpec(const char* alias) {
-    if (alias) {
-        alias_ = alias;
-    }
-}

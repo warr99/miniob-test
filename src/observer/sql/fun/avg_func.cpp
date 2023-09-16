@@ -29,13 +29,8 @@ RC AvgFunc::operate(std::vector<Value>& values) const {
 
     // 计算均值
     double avg = sum / count;
-
     // 将均值写回到values的第一个值中
-    if (firstValueType == AttrType::INTS) {
-        values[0].set_int(static_cast<int>(avg));
-    } else if (firstValueType == AttrType::FLOATS) {
-        values[0].set_float(static_cast<float>(avg));
-    }
+    values[0].set_float(static_cast<float>(avg));
     values.erase(values.begin() + 1, values.end());
     return RC::SUCCESS;
 }
