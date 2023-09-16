@@ -60,7 +60,6 @@ static void wildcard_fields(Table* table, std::vector<Field>& field_metas, const
     for (int i = table_meta.sys_field_num(); i < field_num; i++) {
         AggregationFunc* func = create_func(func_name);
         field_metas.push_back(Field(table, table_meta.field(i), func));
-        // delete func;
     }
 }
 
@@ -135,7 +134,6 @@ RC SelectStmt::create(Db* db, const SelectSqlNode& select_sql, Stmt*& stmt) {
                     }
                     AggregationFunc* func = create_func(func_name);
                     query_fields.push_back(Field(table, field_meta, func));
-                    delete func;
                 }
             }
         } else {
@@ -153,7 +151,6 @@ RC SelectStmt::create(Db* db, const SelectSqlNode& select_sql, Stmt*& stmt) {
             }
             AggregationFunc* func = create_func(relation_attr.aggregation_func.c_str());
             query_fields.push_back(Field(table, field_meta, func));
-            // delete func;
         }
     }
 
