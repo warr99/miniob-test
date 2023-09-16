@@ -507,6 +507,14 @@ select_attr:
       attr.attribute_name = "*";
       $$->emplace_back(attr);
     }
+    | ID LBRACE '*' RBRACE {
+      $$ = new std::vector<RelAttrSqlNode>;
+      RelAttrSqlNode attr;
+      attr.relation_name  = "";
+      attr.attribute_name = "*";
+      attr.aggregation_func = $1;
+      $$->emplace_back(attr);
+    }
     | rel_attr attr_list {
       if ($2 != nullptr) {
         $$ = $2;

@@ -8,11 +8,24 @@ AggregationFunc::AggregationFunc(const AggregationFunc& other) {
     type_ = other.type_;
 }
 
-RC AggregationFunc ::operate() {
+RC AggregationFunc ::operate(std::vector<Value>& values) const {
     return RC::VARIABLE_NOT_VALID;
 }
 
+std::string toUpperCase(const std::string& str) {
+    std::string result = str;  // 创建一个副本以存储结果
+
+    // 使用循环遍历字符串中的每个字符
+    for (char& c : result) {
+        c = std::toupper(c);  // 将字符转换为大写
+    }
+
+    return result;
+}
+
 FuncType stringToFuncType(const std::string& str) {
+    std::string res = toUpperCase(str);
+
     static std::map<std::string, FuncType> funcTypeMap = {
         {"MAX", FuncType::FUNC_MAX},
         {"MIN", FuncType::FUNC_MIN},
@@ -20,7 +33,7 @@ FuncType stringToFuncType(const std::string& str) {
         {"AVG", FuncType::FUNC_AVG},
         {"UNDIFINED", FuncType::FUNC_UNDIFINED}};
 
-    auto it = funcTypeMap.find(str);
+    auto it = funcTypeMap.find(res);
     if (it != funcTypeMap.end()) {
         return it->second;
     } else {

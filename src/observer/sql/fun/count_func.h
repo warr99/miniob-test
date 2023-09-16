@@ -3,12 +3,12 @@
 #include "sql/fun/aggregation_func.h"
 #include <algorithm> 
 
-class MaxFunc : public AggregationFunc {
+class CountFunc : public AggregationFunc {
    private:
     /* data */
    public:
-    MaxFunc();
-    ~MaxFunc() = default;
+    CountFunc();
+    ~CountFunc() = default;
     RC operate(std::vector<Value>& values) const override;
 };
 

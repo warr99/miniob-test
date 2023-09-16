@@ -16,6 +16,9 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 #include "common/log/log.h"
 #include "sql/fun/max_func.h"
+#include "sql/fun/min_func.h"
+#include "sql/fun/count_func.h"
+#include "sql/fun/avg_func.h"
 #include "sql/stmt/filter_stmt.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
@@ -34,12 +37,15 @@ AggregationFunc* create_func(const char* func_name) {
             return new MaxFunc();
         }
         case FuncType::FUNC_MIN: {
+            return new MinFunc();
             break;
         }
         case FuncType::FUNC_COUNT: {
+            return new CountFunc();
             break;
         }
         case FuncType::FUNC_AVG: {
+            return new AvgFunc();
             break;
         }
         default:
@@ -52,10 +58,9 @@ static void wildcard_fields(Table* table, std::vector<Field>& field_metas, const
     const TableMeta& table_meta = table->table_meta();
     const int field_num = table_meta.field_num();
     for (int i = table_meta.sys_field_num(); i < field_num; i++) {
-        // 如果是" select * " 意味着没有使用聚合函数
         AggregationFunc* func = create_func(func_name);
-        field_metas.push_back(Field(table, table_meta.field(i), *func));
-        delete func;
+        field_metas.push_back(Field(table, table_meta.field(i), func));
+        // delete func;
     }
 }
 
@@ -110,7 +115,7 @@ RC SelectStmt::create(Db* db, const SelectSqlNode& select_sql, Stmt*& stmt) {
                     return RC::SCHEMA_FIELD_MISSING;
                 }
                 for (Table* table : tables) {
-                    wildcard_fields(table, query_fields);
+                    wildcard_fields(table, query_fields, func_name);
                 }
             } else {
                 auto iter = table_map.find(table_name);
@@ -121,16 +126,15 @@ RC SelectStmt::create(Db* db, const SelectSqlNode& select_sql, Stmt*& stmt) {
 
                 Table* table = iter->second;
                 if (0 == strcmp(field_name, "*")) {
-                    wildcard_fields(table, query_fields);
+                    wildcard_fields(table, query_fields, func_name);
                 } else {
                     const FieldMeta* field_meta = table->table_meta().field(field_name);
                     if (nullptr == field_meta) {
                         LOG_WARN("no such field. field=%s.%s.%s", db->name(), table->name(), field_name);
                         return RC::SCHEMA_FIELD_MISSING;
                     }
-                    // TODO
                     AggregationFunc* func = create_func(func_name);
-                    query_fields.push_back(Field(table, field_meta, *func));
+                    query_fields.push_back(Field(table, field_meta, func));
                     delete func;
                 }
             }
@@ -148,8 +152,8 @@ RC SelectStmt::create(Db* db, const SelectSqlNode& select_sql, Stmt*& stmt) {
                 return RC::SCHEMA_FIELD_MISSING;
             }
             AggregationFunc* func = create_func(relation_attr.aggregation_func.c_str());
-            query_fields.push_back(Field(table, field_meta, *func));
-            delete func;
+            query_fields.push_back(Field(table, field_meta, func));
+            // delete func;
         }
     }
 

@@ -20,36 +20,30 @@ See the Mulan PSL v2 for more details. */
  * @brief 选择/投影物理算子
  * @ingroup PhysicalOperator
  */
-class ProjectPhysicalOperator : public PhysicalOperator
-{
-public:
-  ProjectPhysicalOperator()
-  {}
+class ProjectPhysicalOperator : public PhysicalOperator {
+   public:
+    ProjectPhysicalOperator() {}
 
-  virtual ~ProjectPhysicalOperator() = default;
+    virtual ~ProjectPhysicalOperator() = default;
 
-  void add_expressions(std::vector<std::unique_ptr<Expression>> &&expressions)
-  {
-    
-  }
-  void add_projection(const Table *table, const FieldMeta *field);
+    void add_expressions(std::vector<std::unique_ptr<Expression>>&& expressions) {
+    }
+    void add_projection(const Table* table, const FieldMeta* field, const AggregationFunc* func);
 
-  PhysicalOperatorType type() const override
-  {
-    return PhysicalOperatorType::PROJECT;
-  }
+    PhysicalOperatorType type() const override {
+        return PhysicalOperatorType::PROJECT;
+    }
 
-  RC open(Trx *trx) override;
-  RC next() override;
-  RC close() override;
+    RC open(Trx* trx) override;
+    RC next() override;
+    RC close() override;
 
-  int cell_num() const
-  {
-    return tuple_.cell_num();
-  }
+    int cell_num() const {
+        return tuple_.cell_num();
+    }
 
-  Tuple *current_tuple() override;
+    Tuple* current_tuple() override;
 
-private:
-  ProjectTuple tuple_;
+   private:
+    ProjectTuple tuple_;
 };

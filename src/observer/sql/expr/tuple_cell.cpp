@@ -12,35 +12,63 @@ See the Mulan PSL v2 for more details. */
 // Created by WangYunlai on 2022/07/05.
 //
 
-#include <sstream>
 #include "sql/expr/tuple_cell.h"
-#include "storage/field/field.h"
-#include "common/log/log.h"
+#include <sstream>
 #include "common/lang/comparator.h"
 #include "common/lang/string.h"
+#include "common/log/log.h"
+#include "storage/field/field.h"
 
-TupleCellSpec::TupleCellSpec(const char *table_name, const char *field_name, const char *alias)
-{
-  if (table_name) {
-    table_name_ = table_name;
-  }
-  if (field_name) {
-    field_name_ = field_name;
-  }
-  if (alias) {
-    alias_ = alias;
-  } else {
-    if (table_name_.empty()) {
-      alias_ = field_name_;
-    } else {
-      alias_ = table_name_ + "." + field_name_;
+// TupleCellSpec::TupleCellSpec(const char* table_name, const char* field_name, const char* alias) {
+//     if (table_name) {
+//         table_name_ = table_name;
+//     }
+//     if (field_name) {
+//         field_name_ = field_name;
+//     }
+//     if (alias) {
+//         alias_ = alias;
+//     } else {
+//         if (table_name_.empty()) {
+//             alias_ = field_name_;
+//         } else {
+//             alias_ = table_name_ + "." + field_name_;
+//         }
+//     }
+// }
+
+TupleCellSpec::TupleCellSpec(const char* table_name, const char* field_name, const char* alias, const AggregationFunc* func) {
+    if (table_name) {
+        table_name_ = table_name;
     }
-  }
+    if (field_name) {
+        field_name_ = field_name;
+    }
+    if (alias) {
+        alias_ = alias;
+    }
+    if (&func != nullptr) {
+        func_ = func;
+    } else {
+        if (table_name_.empty()) {
+            alias_ = field_name_;
+        } else {
+            alias_ = table_name_ + "." + field_name_;
+        }
+    }
 }
 
-TupleCellSpec::TupleCellSpec(const char *alias)
-{
-  if (alias) {
-    alias_ = alias;
-  }
+TupleCellSpec::TupleCellSpec(const char* alias, const AggregationFunc* func) {
+    if (alias) {
+        alias_ = alias;
+    }
+    if (&func != nullptr) {
+        func_ = func;
+    }
+}
+
+TupleCellSpec::TupleCellSpec(const char* alias) {
+    if (alias) {
+        alias_ = alias;
+    }
 }

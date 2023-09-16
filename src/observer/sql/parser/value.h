@@ -53,6 +53,8 @@ class Value {
     Value(const Value& other) = default;
     Value& operator=(const Value& other) = default;
 
+    Value operator+(const Value& other) const;
+
     void set_type(AttrType type) {
         this->attr_type_ = type;
     }
@@ -91,6 +93,8 @@ class Value {
     bool get_boolean() const;
     void value_destory(Value* value);
     int get_date() const;
+    AttrType getType() const;
+    bool operator<(const Value& other) const;
 
    private:
     AttrType attr_type_ = UNDEFINED;

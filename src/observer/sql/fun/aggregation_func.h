@@ -3,7 +3,11 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <vector>
 #include "common/rc.h"
+#include "sql/parser/value.h"
+#include <cctype>
+#include <string>
 
 enum class FuncType {
     FUNC_MAX,    // 默认值为0
@@ -20,7 +24,7 @@ class AggregationFunc {
     FuncType type_ = FuncType::FUNC_UNDIFINED;
 
    public:
-    virtual RC operate();
+    virtual RC operate(std::vector<Value>& values) const;
 
     AggregationFunc();
 
@@ -36,9 +40,7 @@ class AggregationFunc {
         return *this;
     }
 
-    FuncType getType() {
+    FuncType getType() const {
         return type_;
     }
 };
-
-

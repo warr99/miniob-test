@@ -75,7 +75,7 @@ RC ExecuteStage::handle_request_with_physical_operator(SQLStageEvent* sql_event)
                 if (with_table_name) {
                     schema.append_cell(field.table_name(), field.field_name());
                 } else {
-                    schema.append_cell(field.field_name());
+                    schema.append_cell(field.field_name(),field.func());
                 }
             }
         } break;

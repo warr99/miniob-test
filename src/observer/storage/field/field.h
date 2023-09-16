@@ -25,7 +25,7 @@ See the Mulan PSL v2 for more details. */
 class Field {
    public:
     Field() = default;
-    Field(const Table* table, const FieldMeta* field, const AggregationFunc& func)
+    Field(const Table* table, const FieldMeta* field, const AggregationFunc* func)
         : table_(table), field_(field), func_(func) {}
 
     Field(const Table* table, const FieldMeta* field)
@@ -50,7 +50,7 @@ class Field {
         return field_;
     }
 
-    const AggregationFunc& func() const {
+    const AggregationFunc* func() const {
         return func_;
     }
 
@@ -80,5 +80,5 @@ class Field {
    private:
     const Table* table_ = nullptr;
     const FieldMeta* field_ = nullptr;
-    const AggregationFunc func_;
+    const AggregationFunc* func_;
 };

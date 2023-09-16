@@ -171,8 +171,8 @@ std::string Value::to_string() const {
 int Value::compare(const Value& other) const {
     if (this->attr_type_ == other.attr_type_) {
         switch (this->attr_type_) {
-            case INTS: 
-            case DATES:{
+            case INTS:
+            case DATES: {
                 return common::compare_int((void*)&this->num_value_.int_value_, (void*)&other.num_value_.int_value_);
             } break;
             case FLOATS: {
@@ -304,22 +304,39 @@ bool Value::get_boolean() const {
 }
 
 int Value::get_date() const {
-  switch (attr_type_)
-  {
-  case INTS: case DATES: {
-    return num_value_.int_value_;
-  }break;
-  case CHARS: {
-    int32_t date = -1;
-    RC rc = string_to_date(str_value_.c_str(), date);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("Failed to convert data type. str=%s, target_type=%s", str_value_, "DATES");
+    switch (attr_type_) {
+        case INTS:
+        case DATES: {
+            return num_value_.int_value_;
+        } break;
+        case CHARS: {
+            int32_t date = -1;
+            RC rc = string_to_date(str_value_.c_str(), date);
+            if (rc != RC::SUCCESS) {
+                LOG_WARN("Failed to convert data type. str=%s, target_type=%s", str_value_, "DATES");
+            }
+            return date;
+        } break;
+        default: {
+            LOG_WARN("unknown data type. type=%d", attr_type_);
+            return 0;
+        } break;
     }
-    return date;
-  }break;
-  default: {
-      LOG_WARN("unknown data type. type=%d", attr_type_);
-      return 0;
-  }break;
-  }
+}
+
+AttrType Value::getType() const {
+    return attr_type_;
+}
+
+bool Value::operator<(const Value& other) const {
+    if (attr_type_ == AttrType::INTS && other.getType() == AttrType::INTS) {
+        return get_int() < other.get_int();
+    } else if (getType() == AttrType::FLOATS && other.getType() == AttrType::FLOATS) {
+        return get_float() < other.get_float();
+    } else if (getType() == AttrType::BOOLEANS && other.getType() == AttrType::BOOLEANS) {
+        return get_boolean() < other.get_boolean();
+    } else {
+        // 在处理不同类型的值时，根据需要添加适当的逻辑
+        return false;
+    }
 }
