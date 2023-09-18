@@ -27,6 +27,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/log/log.h"
 #include "sql/parser/parse_defs.h"
 #include "storage/buffer/disk_buffer_pool.h"
+#include "storage/index/index_type.h"
 #include "storage/record/record_manager.h"
 #include "storage/trx/latch_memo.h"
 
@@ -99,18 +100,17 @@ class KeyComparator {
         return attr_comparator_;
     }
 
-    int operator()(const char* v1, const char* v2) const {
+    virtual int operator()(const char* v1, const char* v2) const {
         int result = attr_comparator_(v1, v2);
         if (result != 0) {
             return result;
         }
-
         const RID* rid1 = (const RID*)(v1 + attr_comparator_.attr_length());
         const RID* rid2 = (const RID*)(v2 + attr_comparator_.attr_length());
         return RID::compare(rid1, rid2);
     }
 
-   private:
+   protected:
     AttrComparator attr_comparator_;
 };
 
@@ -119,23 +119,12 @@ class KeyComparator {
  * @details BplusTree的键值除了字段属性，还有RID，是为了避免属性值重复而增加的。
  * @ingroup BPlusTree
  */
-class UniqueKeyComparator {
+class UniqueKeyComparator : public KeyComparator {
    public:
-    void init(AttrType type, int length) {
-        attr_comparator_.init(type, length);
-    }
-
-    const AttrComparator& attr_comparator() const {
-        return attr_comparator_;
-    }
-
-    int operator()(const char* v1, const char* v2) const {
+    int operator()(const char* v1, const char* v2) const override {
         int result = attr_comparator_(v1, v2);
         return result;
     }
-
-   private:
-    AttrComparator attr_comparator_;
 };
 
 /**
@@ -573,7 +562,7 @@ class BplusTreeHandler {
     // 这个锁可以使用递归读写锁，但是这里偷懒先不改
     common::SharedMutex root_lock_;
 
-    KeyComparator key_comparator_;
+    KeyComparator* key_comparator_;
     KeyPrinter key_printer_;
 
     std::unique_ptr<common::MemPoolItem> mem_pool_item_;
