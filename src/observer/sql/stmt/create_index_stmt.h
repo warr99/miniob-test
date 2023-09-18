@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include <string>
 
 #include "sql/stmt/stmt.h"
+#include "storage/index/index_type.h"
 
 struct CreateIndexSqlNode;
 class Table;
@@ -29,10 +30,11 @@ class FieldMeta;
 class CreateIndexStmt : public Stmt
 {
 public:
-  CreateIndexStmt(Table *table, const FieldMeta *field_meta, const std::string &index_name)
+  CreateIndexStmt(Table *table, const FieldMeta *field_meta, const std::string &index_name,IndexType index_type)
         : table_(table),
           field_meta_(field_meta),
-          index_name_(index_name)
+          index_name_(index_name),
+          index_type_(index_type)
   {}
 
   virtual ~CreateIndexStmt() = default;
@@ -50,4 +52,5 @@ private:
   Table *table_ = nullptr;
   const FieldMeta *field_meta_ = nullptr;
   std::string index_name_;
+  IndexType index_type_ = IndexType::IDX_NORMAL;
 };

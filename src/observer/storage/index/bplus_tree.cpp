@@ -732,7 +732,7 @@ RC BplusTreeHandler::create(const char* file_name, AttrType attr_type, int attr_
         close();
         return RC::NOMEM;
     }
-
+    // TODO 根据不同的索引()给B+树设置不同的比较规则 
     key_comparator_.init(file_header->attr_type, file_header->attr_length);
     key_printer_.init(file_header->attr_type, file_header->attr_length);
     LOG_INFO("Successfully create index %s", file_name);
@@ -1028,13 +1028,13 @@ RC BplusTreeHandler::find_leaf_internal(
     if (is_empty()) {
         return RC::EMPTY;
     }
-
+    // 获取根节点页的内容并将其加载到名为frame的内存页帧中
     RC rc = crabing_protocal_fetch_page(latch_memo, op, file_header_.root_page, true /* is_root_node */, frame);
     if (rc != RC::SUCCESS) {
         LOG_WARN("failed to fetch root page. page id=%d, rc=%d:%s", file_header_.root_page, rc, strrc(rc));
         return rc;
     }
-
+    // 进入一个循环，该循环用于遍历B+树的内部节点，直到找到叶子节点
     IndexNode* node = (IndexNode*)frame->data();
     PageNum next_page_id;
     for (; !node->is_leaf;) {

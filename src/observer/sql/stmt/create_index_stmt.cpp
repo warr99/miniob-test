@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/db/db.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
+#include "storage/index/index_type.h"
 
 using namespace std;
 using namespace common;
@@ -52,6 +53,6 @@ RC CreateIndexStmt::create(Db *db, const CreateIndexSqlNode &create_index, Stmt 
     return RC::SCHEMA_INDEX_NAME_REPEAT;
   }
 
-  stmt = new CreateIndexStmt(table, field_meta, create_index.index_name);
+  stmt = new CreateIndexStmt(table, field_meta, create_index.index_name,stringToIndex(create_index.index_type));
   return RC::SUCCESS;
 }

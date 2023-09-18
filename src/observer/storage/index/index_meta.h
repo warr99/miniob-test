@@ -50,4 +50,5 @@ public:
 protected:
   std::string name_;   // index's name
   std::string field_;  // field's name
+  // TODO 索引的类型
 };

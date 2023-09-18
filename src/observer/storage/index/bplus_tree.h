@@ -115,6 +115,30 @@ class KeyComparator {
 };
 
 /**
+ * @brief 唯一键值比较(BplusTree)->直接判断键值是否相同
+ * @details BplusTree的键值除了字段属性，还有RID，是为了避免属性值重复而增加的。
+ * @ingroup BPlusTree
+ */
+class UniqueKeyComparator {
+   public:
+    void init(AttrType type, int length) {
+        attr_comparator_.init(type, length);
+    }
+
+    const AttrComparator& attr_comparator() const {
+        return attr_comparator_;
+    }
+
+    int operator()(const char* v1, const char* v2) const {
+        int result = attr_comparator_(v1, v2);
+        return result;
+    }
+
+   private:
+    AttrComparator attr_comparator_;
+};
+
+/**
  * @brief 属性打印,调试使用(BplusTree)
  * @ingroup BPlusTree
  */

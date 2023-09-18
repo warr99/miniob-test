@@ -34,14 +34,14 @@ ForwardIterator lower_bound(ForwardIterator first, ForwardIterator last,
 {
   bool found = false;
   ForwardIterator iter;
-  const auto count = std::distance(first, last);
+  const auto count = std::distance(first, last); // 计算了查找范围中元素的数量，即 first 和 last 之间的距离
   auto last_count = count;
   while (last_count > 0) {
     iter = first;
     auto step = last_count / 2;
-    std::advance(iter, step);
-    int result = comp(*iter, val);
-    if (0 == result) {
+    std::advance(iter, step); // 将 iter 向前移动 step 步，以找到中间位置的迭代器
+    int result = comp(*iter, val); // 使用比较函数 comp 比较中间位置的元素和目标值 val
+    if (0 == result) { // 找到了与 val 相等的元素
       first = iter;
       found = true;
       break;
