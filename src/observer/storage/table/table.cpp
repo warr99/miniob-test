@@ -224,6 +224,7 @@ RC Table::update_record(Record& record, Value& value, int offset) {
         LOG_ERROR("Update record failed. table name=%s, rc=%s", table_meta_.name(), strrc(rc));
         return rc;
     }
+    return rc;
 }
 
 RC Table::visit_record(const RID& rid, bool readonly, std::function<void(Record&)> visitor) {
