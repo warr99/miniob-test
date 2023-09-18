@@ -472,7 +472,7 @@ TEST(test_bplus_tree, test_chars)
   const char *index_name = "chars.btree";
   ::remove(index_name);
   handler = new BplusTreeHandler();
-  handler->create(index_name, CHARS, 8, ORDER, ORDER);
+  handler->create(index_name, CHARS, 8, IndexType::IDX_NORMAL, ORDER, ORDER);
 
   char keys[][9] = {
     "abcdefg",
@@ -515,7 +515,7 @@ TEST(test_bplus_tree, test_scanner)
   const char *index_name = "scanner.btree";
   ::remove(index_name);
   handler = new BplusTreeHandler();
-  handler->create(index_name, INTS, sizeof(int), ORDER, ORDER);
+  handler->create(index_name, INTS, sizeof(int), IndexType::IDX_UNIQUE, ORDER, ORDER);
 
   int count = 0;
   RC rc = RC::SUCCESS;
@@ -724,7 +724,7 @@ TEST(test_bplus_tree, test_bplus_tree_insert)
 
   ::remove(index_name);
   handler = new BplusTreeHandler();
-  handler->create(index_name, INTS, sizeof(int), ORDER, ORDER);
+  handler->create(index_name, INTS, sizeof(int), IndexType::IDX_NORMAL, ORDER, ORDER);
 
   test_insert();
 

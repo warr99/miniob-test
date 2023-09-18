@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <functional>
 #include "storage/table/table_meta.h"
+#include "storage/index/index_type.h"
 
 struct RID;
 class Record;
@@ -89,7 +90,7 @@ class Table {
     RC recover_insert_record(Record& record);
 
     // TODO refactor
-    RC create_index(Trx* trx, const FieldMeta* field_meta, const char* index_name);
+    RC create_index(Trx* trx, const FieldMeta* field_meta, const char* index_name, IndexType index_type);
 
     RC get_record_scanner(RecordFileScanner& scanner, Trx* trx, bool readonly);
 

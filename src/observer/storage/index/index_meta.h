@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <string>
 #include "common/rc.h"
+#include "storage/index/index_type.h"
 
 class TableMeta;
 class FieldMeta;
@@ -30,25 +31,25 @@ class Value;
  * @details 一个索引包含了表的哪些字段，索引的名称等。
  * 如果以后实现了多种类型的索引，还需要记录索引的类型，对应类型的一些元数据等
  */
-class IndexMeta 
-{
-public:
-  IndexMeta() = default;
+class IndexMeta {
+   public:
+    IndexMeta() = default;
 
-  RC init(const char *name, const FieldMeta &field);
+    RC init(const char* name, const FieldMeta& field, IndexType index_type);
 
-public:
-  const char *name() const;
-  const char *field() const;
+   public:
+    const char* name() const;
+    const char* field() const;
+    const IndexType indexType() const;
 
-  void desc(std::ostream &os) const;
+    void desc(std::ostream& os) const;
 
-public:
-  void to_json(Json::Value &json_value) const;
-  static RC from_json(const TableMeta &table, const Json::Value &json_value, IndexMeta &index);
+   public:
+    void to_json(Json::Value& json_value) const;
+    static RC from_json(const TableMeta& table, const Json::Value& json_value, IndexMeta& index);
 
-protected:
-  std::string name_;   // index's name
-  std::string field_;  // field's name
-  // TODO 索引的类型
+   protected:
+    std::string name_;      // index's name
+    std::string field_;     // field's name
+    IndexType index_type_;  // TODO 索引的类型
 };

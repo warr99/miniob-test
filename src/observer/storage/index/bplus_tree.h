@@ -464,6 +464,7 @@ class BplusTreeHandler {
     RC create(const char* file_name,
               AttrType attr_type,
               int attr_length,
+              const IndexType index_type,
               int internal_max_size = -1,
               int leaf_max_size = -1);
 

@@ -670,7 +670,7 @@ RC BplusTreeHandler::sync() {
     return disk_buffer_pool_->flush_all_pages();
 }
 
-RC BplusTreeHandler::create(const char* file_name, AttrType attr_type, int attr_length, int internal_max_size /* = -1*/, int leaf_max_size /* = -1 */) {
+RC BplusTreeHandler::create(const char* file_name, AttrType attr_type, int attr_length, const IndexType index_type, int internal_max_size /* = -1*/, int leaf_max_size /* = -1 */) {
     BufferPoolManager& bpm = BufferPoolManager::instance();
     RC rc = bpm.create_file(file_name);
     if (rc != RC::SUCCESS) {
@@ -732,7 +732,11 @@ RC BplusTreeHandler::create(const char* file_name, AttrType attr_type, int attr_
         close();
         return RC::NOMEM;
     }
-    // TODO 根据不同的索引()给B+树设置不同的比较规则 
+    if (index_type == IndexType::IDX_UNIQUE) {
+        // TODO 根据不同的索引给B+树设置不同的比较规则
+        LOG_DEBUG("根据不同的索引给B+树设置不同的比较规则");
+        
+    }
     key_comparator_.init(file_header->attr_type, file_header->attr_length);
     key_printer_.init(file_header->attr_type, file_header->attr_length);
     LOG_INFO("Successfully create index %s", file_name);

@@ -44,7 +44,7 @@ public:
   Table *table() const { return table_; }
   const FieldMeta *field_meta() const { return field_meta_; }
   const std::string &index_name() const { return index_name_; }
-
+  const IndexType index_type() const { return index_type_; }
 public:
   static RC create(Db *db, const CreateIndexSqlNode &create_index, Stmt *&stmt);
 

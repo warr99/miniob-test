@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 #include "session/session.h"
 #include "common/log/log.h"
 #include "storage/table/table.h"
+#include "storage/index/index_type.h"
 
 RC CreateIndexExecutor::execute(SQLStageEvent *sql_event)
 {
@@ -31,5 +32,6 @@ RC CreateIndexExecutor::execute(SQLStageEvent *sql_event)
   
   Trx *trx = session->current_trx();
   Table *table = create_index_stmt->table();
-  return table->create_index(trx, create_index_stmt->field_meta(), create_index_stmt->index_name().c_str());// TODO 传入索引类型
+  IndexType index_type = create_index_stmt->index_type();
+  return table->create_index(trx, create_index_stmt->field_meta(), create_index_stmt->index_name().c_str(),create_index_stmt->index_type());// TODO 传入索引类型
 }

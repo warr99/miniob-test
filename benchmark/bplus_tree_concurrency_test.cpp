@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/buffer/disk_buffer_pool.h"
 #include "common/log/log.h"
 #include "integer_generator.h"
+#include "storage/index/index_type.h"
 
 using namespace std;
 using namespace common;
@@ -71,7 +72,7 @@ public:
 
     const char *filename = btree_filename.c_str();
 
-    RC rc = handler_.create(filename, INTS, sizeof(int32_t) /*attr_len*/, internal_max_size, leaf_max_size);
+    RC rc = handler_.create(filename, INTS, sizeof(int32_t) /*attr_len*/,IndexType::IDX_NORMAL ,internal_max_size, leaf_max_size);
     if (rc != RC::SUCCESS) {
       throw runtime_error("failed to create btree handler");
     }
