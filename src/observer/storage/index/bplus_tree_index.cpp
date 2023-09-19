@@ -18,7 +18,7 @@ See the Mulan PSL v2 for more details. */
 BplusTreeIndex::~BplusTreeIndex() noexcept {
     close();
 }
-
+// TODO 支持联合索引 -> 接收 vector<const FieldMeta&> field_meta
 RC BplusTreeIndex::create(const char* file_name, const IndexMeta& index_meta, const FieldMeta& field_meta) {
     if (inited_) {
         LOG_WARN("Failed to create index due to the index has been created before. file_name:%s, index:%s, field:%s",
@@ -29,7 +29,7 @@ RC BplusTreeIndex::create(const char* file_name, const IndexMeta& index_meta, co
     }
 
     Index::init(index_meta, field_meta);
-    // TODO 传入索引类型index_meta->IdxType_
+    // 
     RC rc = index_handler_.create(file_name, field_meta.type(), field_meta.len(), index_meta.indexType());
     if (RC::SUCCESS != rc) {
         LOG_WARN("Failed to create index_handler, file_name:%s, index:%s, field:%s, rc:%s",
@@ -89,6 +89,7 @@ RC BplusTreeIndex::close() {
 }
 
 RC BplusTreeIndex::insert_entry(const char* record, const RID* rid) {
+    // 循环调用 insert_entry
     return index_handler_.insert_entry(record + field_meta_.offset(), rid);
 }
 

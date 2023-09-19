@@ -1276,7 +1276,7 @@ MemPoolItem::unique_ptr BplusTreeHandler::make_key(const char* user_key, const R
     memcpy(static_cast<char*>(key.get()) + file_header_.attr_length, &rid, sizeof(rid));
     return key;
 }
-
+// 改造成接收多个key vector<const char*>keys
 RC BplusTreeHandler::insert_entry(const char* user_key, const RID* rid) {
     if (user_key == nullptr || rid == nullptr) {
         LOG_WARN("Invalid arguments, key is empty or rid is empty");
