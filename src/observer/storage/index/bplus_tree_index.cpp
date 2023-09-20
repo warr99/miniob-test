@@ -19,7 +19,7 @@ BplusTreeIndex::~BplusTreeIndex() noexcept {
     close();
 }
 // TODO 支持联合索引 -> 接收 vector<const FieldMeta&> field_meta
-RC BplusTreeIndex::create(const char* file_name, const IndexMeta& index_meta, const FieldMeta& field_meta) {
+RC BplusTreeIndex::create(const char* file_name, const IndexMeta& index_meta, std::vector<FieldMeta> field_metas) {
     if (inited_) {
         LOG_WARN("Failed to create index due to the index has been created before. file_name:%s, index:%s, field:%s",
                  file_name,
@@ -28,9 +28,22 @@ RC BplusTreeIndex::create(const char* file_name, const IndexMeta& index_meta, co
         return RC::RECORD_OPENNED;
     }
 
-    Index::init(index_meta, field_meta);
-    // 
-    RC rc = index_handler_.create(file_name, field_meta.type(), field_meta.len(), index_meta.indexType());
+    Index::init(index_meta, field_metas);
+    // 设置类型,
+    // 如果是多个字段 -> 设置为MULTI
+    // 如果只有一个字段 -> 设置为第一个字段的类型
+    std::vector<AttrType> attr_types;
+    for (int i = 0; i < field_metas.size(); i++) {
+        attr_types.push_back(field_metas[i].type());
+    }
+
+    // 计算联合索引的长度
+    std::vector<int32_t> attr_lens;
+    for (int i = 0; i < field_metas.size(); i++) {
+        attr_lens.push_back(field_metas[i].len());
+    }
+
+    RC rc = index_handler_.create(file_name, attr_types, attr_lens, index_meta.indexType());
     if (RC::SUCCESS != rc) {
         LOG_WARN("Failed to create index_handler, file_name:%s, index:%s, field:%s, rc:%s",
                  file_name,
@@ -51,7 +64,7 @@ RC BplusTreeIndex::drop() {
     return RC::SUCCESS;
 }
 
-RC BplusTreeIndex::open(const char* file_name, const IndexMeta& index_meta, const FieldMeta& field_meta) {
+RC BplusTreeIndex::open(const char* file_name, const IndexMeta& index_meta, std::vector<FieldMeta> field_metas) {
     if (inited_) {
         LOG_WARN("Failed to open index due to the index has been initedd before. file_name:%s, index:%s, field:%s",
                  file_name,
@@ -60,7 +73,7 @@ RC BplusTreeIndex::open(const char* file_name, const IndexMeta& index_meta, cons
         return RC::RECORD_OPENNED;
     }
 
-    Index::init(index_meta, field_meta);
+    Index::init(index_meta, field_metas);
 
     RC rc = index_handler_.open(file_name);
     if (RC::SUCCESS != rc) {
@@ -85,16 +98,31 @@ RC BplusTreeIndex::close() {
         inited_ = false;
     }
     LOG_INFO("Successfully close index.");
-    return RC::SUCCESS;                                                                                                                                                                 
+    return RC::SUCCESS;
 }
 
 RC BplusTreeIndex::insert_entry(const char* record, const RID* rid) {
-    // 循环调用 insert_entry
-    return index_handler_.insert_entry(record + field_meta_.offset(), rid);
+    RC rc = RC::SUCCESS;
+    const char* keys[field_metas_.size()];
+    int offset = 0;
+    for (int i = 0; i < field_metas_.size(); i++) {
+        keys[i] = record + field_metas_[i].offset();
+        offset += field_metas_[i].len();
+    }
+    rc = index_handler_.insert_entry(keys, offset, rid);
+    return rc;
 }
 
-RC BplusTreeIndex::delete_entry(const char* record, const RID* rid) {                                                                                                                           
-    return index_handler_.delete_entry(record + field_meta_.offset(), rid);
+RC BplusTreeIndex::delete_entry(const char* record, const RID* rid) {
+    RC rc = RC::SUCCESS;
+    const char* keys[field_metas_.size()];
+    int offset = 0;
+    for (int i = 0; i < field_metas_.size(); i++) {
+        keys[i] = record + field_metas_[i].offset();
+        offset += field_metas_[i].len();
+    }
+    rc = index_handler_.delete_entry(keys, offset, rid);
+    return rc;
 }
 
 IndexScanner* BplusTreeIndex::create_scanner(

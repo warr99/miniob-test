@@ -30,7 +30,7 @@ class FieldMeta;
 class CreateIndexStmt : public Stmt
 {
 public:
-  CreateIndexStmt(Table *table, std::vector<const FieldMeta*> field_metas, const std::string &index_name,IndexType index_type)
+  CreateIndexStmt(Table *table, std::vector<FieldMeta> field_metas, const std::string &index_name,IndexType index_type)
         : table_(table),
           field_metas_(field_metas),
           index_name_(index_name),
@@ -42,7 +42,7 @@ public:
   StmtType type() const override { return StmtType::CREATE_INDEX; }
 
   Table *table() const { return table_; }
-  std::vector<const FieldMeta*> field_metas() const { return field_metas_; }
+  std::vector<FieldMeta> field_metas() const { return field_metas_; }
   const std::string &index_name() const { return index_name_; }
   const IndexType index_type() const { return index_type_; }
 public:
@@ -50,8 +50,7 @@ public:
 
 private:
   Table *table_ = nullptr;
-  // TODO 支持多个字段 -> std::vector<const FieldMeta*> field_metas_
-  std::vector<const FieldMeta*> field_metas_;
+  std::vector<FieldMeta> field_metas_;
   std::string index_name_;
   IndexType index_type_ = IndexType::IDX_NORMAL;
 };

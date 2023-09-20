@@ -39,8 +39,7 @@ RC CreateIndexStmt::create(Db* db, const CreateIndexSqlNode& create_index, Stmt*
         return RC::SCHEMA_TABLE_NOT_EXIST;
     }
 
-    // TODO 支持多个字段 -> field_metas
-    std::vector<const FieldMeta*> field_metas;
+    std::vector<FieldMeta> field_metas;
     for (int i = 0; i < create_index.attribute_names.size(); i++) {
         const FieldMeta* field_meta = table->table_meta().field(create_index.attribute_names[i].c_str());
         if (nullptr == field_meta) {
@@ -48,7 +47,7 @@ RC CreateIndexStmt::create(Db* db, const CreateIndexSqlNode& create_index, Stmt*
                      db->name(), table_name, create_index.attribute_names[i].c_str());
             return RC::SCHEMA_FIELD_NOT_EXIST;
         }
-        field_metas.push_back(field_meta);
+        field_metas.push_back(*field_meta);
     }
 
     Index* index = table->find_index(create_index.index_name.c_str());

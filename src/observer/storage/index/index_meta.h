@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include <string>
 #include "common/rc.h"
 #include "storage/index/index_type.h"
+#include <vector>
 
 class TableMeta;
 class FieldMeta;
@@ -35,11 +36,11 @@ class IndexMeta {
    public:
     IndexMeta() = default;
 
-    RC init(const char* name, const FieldMeta& field, IndexType index_type);
+    RC init(const char* name, const std::vector<FieldMeta> fields, IndexType index_type);
 
    public:
     const char* name() const;
-    const char* field() const;
+    const std::vector<std::string> field() const;
     const IndexType indexType() const;
 
     void desc(std::ostream& os) const;
@@ -49,7 +50,9 @@ class IndexMeta {
     static RC from_json(const TableMeta& table, const Json::Value& json_value, IndexMeta& index);
 
    protected:
-    std::string name_;      // index's name
-    std::string field_;     // field's name
-    IndexType index_type_;  // TODO 索引的类型
+    std::string name_;                     // index's name
+    std::vector<std::string> field_names_;  // fields's name
+    IndexType index_type_;                 // index's type
 };
+
+std::vector<std::string> jsonToList(const Json::Value& json_array);

@@ -181,7 +181,6 @@ struct CreateIndexSqlNode
 {
   std::string index_name;      ///< Index name
   std::string relation_name;   ///< Relation name
-  // TODO 支持多个字段 -> std::vector<std::string> attribute_names
   std::vector<std::string> attribute_names;  ///< Attribute names
   std::string index_type;
 };

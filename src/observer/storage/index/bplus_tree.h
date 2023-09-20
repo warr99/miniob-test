@@ -61,7 +61,7 @@ class AttrComparator {
         return attr_length_;
     }
 
-    int operator()(const char* v1, const char* v2) const {
+    int compare(const char* v1, const char* v2) {
         switch (attr_type_) {
             case DATES:
             case INTS: {
@@ -92,16 +92,16 @@ class AttrComparator {
  */
 class KeyComparator {
    public:
-    void init(AttrType type, int length) {
-        attr_comparator_.init(type, length);
+    virtual void init(std::vector<AttrType> attr_types, std::vector<int32_t> attr_lengths) {
+        attr_comparator_.init(attr_types[0], attr_lengths[0]);
     }
 
-    const AttrComparator& attr_comparator() const {
+    AttrComparator& attr_comparator() {
         return attr_comparator_;
     }
 
-    virtual int operator()(const char* v1, const char* v2) const {
-        int result = attr_comparator_(v1, v2);
+    virtual int compare(const char* v1, const char* v2) {
+        int result = attr_comparator_.compare(v1, v2);
         if (result != 0) {
             return result;
         }
@@ -121,10 +121,38 @@ class KeyComparator {
  */
 class UniqueKeyComparator : public KeyComparator {
    public:
-    int operator()(const char* v1, const char* v2) const override {
-        int result = attr_comparator_(v1, v2);
+    int compare(const char* v1, const char* v2) override {
+        int result = attr_comparator_.compare(v1, v2);
         return result;
     }
+};
+
+class MultiKeyComparator : public KeyComparator {
+   public:
+    void init(std::vector<AttrType> attr_types, std::vector<int32_t> attr_lengths) override {
+        attr_lengths_ = attr_lengths;
+        attr_types_ = attr_types;
+    }
+
+    int compare(const char* v1, const char* v2) override {
+        int result = 0;
+        int offset = 0;
+        for (int i = 0; i < attr_lengths_.size(); i++) {
+            attr_comparator_.init(attr_types_[i], attr_lengths_[i]);
+            result = attr_comparator_.compare(v1 + offset, v2 + offset);
+            if (result != 0) {
+                return result;
+            }
+            offset += attr_lengths_[i];
+        }
+        const RID* rid1 = (const RID*)(v1 + offset);
+        const RID* rid2 = (const RID*)(v2 + offset);
+        return RID::compare(rid1, rid2);
+    }
+
+   private:
+    std::vector<int32_t> attr_lengths_;  ///< 每个属性的长度
+    std::vector<AttrType> attr_types_;   ///< 每个属性的类型
 };
 
 /**
@@ -178,8 +206,8 @@ class AttrPrinter {
  */
 class KeyPrinter {
    public:
-    void init(AttrType type, int length) {
-        attr_printer_.init(type, length);
+    void init(std::vector<AttrType> attr_types, std::vector<int32_t> attr_lengths) {
+        attr_printer_.init(attr_types[0], attr_lengths[0]);
     }
 
     const AttrPrinter& attr_printer() const {
@@ -213,19 +241,20 @@ struct IndexFileHeader {
     PageNum root_page;          ///< 根节点在磁盘中的页号
     int32_t internal_max_size;  ///< 内部节点最大的键值对数
     int32_t leaf_max_size;      ///< 叶子节点最大的键值对数
-    int32_t attr_length;        ///< 键值的长度
-    int32_t key_length;         ///< attr length + sizeof(RID)
-    AttrType attr_type;         ///< 键值的类型
+    int32_t key_length;         ///< attr length + sizeof(RID)xcsadsc
+    // TODO 这里使用 vector 还是 数组是个值得思考的问题
+    std::vector<int32_t> attr_lengths_;  ///< 每个属性的长度
+    std::vector<AttrType> attr_types_;   ///< 每个属性的类型
 
     const std::string to_string() {
         std::stringstream ss;
 
-        ss << "attr_length:" << attr_length << ","
-           << "key_length:" << key_length << ","
-           << "attr_type:" << attr_type << ","
-           << "root_page:" << root_page << ","
-           << "internal_max_size:" << internal_max_size << ","
-           << "leaf_max_size:" << leaf_max_size << ";";
+        ss /*<< "attr_length:" << attr_lengths << ","*/
+            << "key_length:" << key_length << ","
+            /*<< "attr_type:" << attr_types << ","*/
+            << "root_page:" << root_page << ","
+            << "internal_max_size:" << internal_max_size << ","
+            << "leaf_max_size:" << leaf_max_size << ";";
 
         return ss.str();
     }
@@ -348,11 +377,11 @@ class LeafIndexNodeHandler : public IndexNodeHandler {
      * 查找指定key的插入位置(注意不是key本身)
      * 如果key已经存在，会设置found的值。
      */
-    int lookup(const KeyComparator& comparator, const char* key, bool* found = nullptr) const;
+    int lookup(KeyComparator& comparator, const char* key, bool* found = nullptr) const;
 
     void insert(int index, const char* key, const char* value);
     void remove(int index);
-    int remove(const char* key, const KeyComparator& comparator);
+    int remove(const char* key, KeyComparator& comparator);
     RC move_half_to(LeafIndexNodeHandler& other, DiskBufferPool* bp);
     RC move_first_to_end(LeafIndexNodeHandler& other, DiskBufferPool* disk_buffer_pool);
     RC move_last_to_front(LeafIndexNodeHandler& other, DiskBufferPool* bp);
@@ -361,7 +390,7 @@ class LeafIndexNodeHandler : public IndexNodeHandler {
      */
     RC move_to(LeafIndexNodeHandler& other, DiskBufferPool* bp);
 
-    bool validate(const KeyComparator& comparator, DiskBufferPool* bp) const;
+    bool validate(KeyComparator& comparator, DiskBufferPool* bp) const;
 
     friend std::string to_string(const LeafIndexNodeHandler& handler, const KeyPrinter& printer);
 
@@ -389,7 +418,7 @@ class InternalIndexNodeHandler : public IndexNodeHandler {
     void init_empty();
     void create_new_root(PageNum first_page_num, const char* key, PageNum page_num);
 
-    void insert(const char* key, PageNum page_num, const KeyComparator& comparator);
+    void insert(const char* key, PageNum page_num, KeyComparator& comparator);
     RC move_half_to(LeafIndexNodeHandler& other, DiskBufferPool* bp);
     char* key_at(int index);
     PageNum value_at(int index);
@@ -409,7 +438,7 @@ class InternalIndexNodeHandler : public IndexNodeHandler {
      * @param[out] found 如果是有效指针，将会返回当前是否存在指定的键值
      * @param[out] insert_position 如果是有效指针，将会返回可以插入指定键值的位置
      */
-    int lookup(const KeyComparator& comparator,
+    int lookup(KeyComparator& comparator,
                const char* key,
                bool* found = nullptr,
                int* insert_position = nullptr) const;
@@ -419,7 +448,7 @@ class InternalIndexNodeHandler : public IndexNodeHandler {
     RC move_last_to_front(InternalIndexNodeHandler& other, DiskBufferPool* bp);
     RC move_half_to(InternalIndexNodeHandler& other, DiskBufferPool* bp);
 
-    bool validate(const KeyComparator& comparator, DiskBufferPool* bp) const;
+    bool validate(KeyComparator& comparator, DiskBufferPool* bp) const;
 
     friend std::string to_string(const InternalIndexNodeHandler& handler, const KeyPrinter& printer);
 
@@ -451,8 +480,8 @@ class BplusTreeHandler {
      * attrType描述被索引属性的类型，attrLength描述被索引属性的长度
      */
     RC create(const char* file_name,
-              AttrType attr_type,
-              int attr_length,
+              std::vector<AttrType> attr_types,
+              std::vector<int32_t> attr_lens,
               const IndexType index_type,
               int internal_max_size = -1,
               int leaf_max_size = -1);
@@ -477,14 +506,14 @@ class BplusTreeHandler {
      * 即向索引中插入一个值为（user_key，rid）的键值对
      * @note 这里假设user_key的内存大小与attr_length 一致
      */
-    RC insert_entry(const char* user_key, const RID* rid);
+    RC insert_entry(const char* user_keys[],int total_offset ,const RID* rid);
 
     /**
      * 从IndexHandle句柄对应的索引中删除一个值为（*pData，rid）的索引项
      * @return RECORD_INVALID_KEY 指定值不存在
      * @note 这里假设user_key的内存大小与attr_length 一致
      */
-    RC delete_entry(const char* user_key, const RID* rid);
+    RC delete_entry(const char* user_keys[],int total_offset, const RID* rid);
 
     bool is_empty() const;
 
@@ -550,7 +579,7 @@ class BplusTreeHandler {
     RC adjust_root(LatchMemo& latch_memo, Frame* root_frame);
 
    private:
-    common::MemPoolItem::unique_ptr make_key(const char* user_key, const RID& rid);
+    common::MemPoolItem::unique_ptr make_key(const char* user_keys[], int total_offset,const RID& rid);
     void free_key(char* key);
 
    protected:

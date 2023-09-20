@@ -33,6 +33,5 @@ RC CreateIndexExecutor::execute(SQLStageEvent *sql_event)
   Trx *trx = session->current_trx();
   Table *table = create_index_stmt->table();
   IndexType index_type = create_index_stmt->index_type();
-  // TODO 支持联合字段 -> create_index_stmt->field_meta() 返回 std::vector<const FieldMeta*> field_metas_
   return table->create_index(trx, create_index_stmt->field_metas(), create_index_stmt->index_name().c_str(),create_index_stmt->index_type());
 }

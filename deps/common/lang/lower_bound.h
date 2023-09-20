@@ -40,7 +40,7 @@ ForwardIterator lower_bound(ForwardIterator first, ForwardIterator last,
     iter = first;
     auto step = last_count / 2;
     std::advance(iter, step); // 将 iter 向前移动 step 步，以找到中间位置的迭代器
-    int result = (*comp)(*iter, val); // 使用比较函数 comp 比较中间位置的元素和目标值 val
+    int result = (*comp).compare(*iter, val); // 使用比较函数 comp 比较中间位置的元素和目标值 val
     if (0 == result) { // 找到了与 val 相等的元素
       first = iter;
       found = true;
@@ -64,7 +64,7 @@ template <typename T>
 class Comparator
 {
 public:
-  int operator() (const T &v1, const T &v2) const
+  int compare (const T &v1, const T &v2)
   {
     if (v1 < v2) {
       return -1;

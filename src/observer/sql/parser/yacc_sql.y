@@ -260,7 +260,6 @@ desc_table_stmt:
     ;
 
 create_index_stmt:    /*create index 语句的语法解析树*/
-  // TODO 支持多个字段联合索引 -> LBRACE ID RBRACE 中的 ID 改成递归定义
     CREATE INDEX ID ON ID LBRACE ID idx_attr_list RBRACE
     {
       $$ = new ParsedSqlNode(SCF_CREATE_INDEX);
