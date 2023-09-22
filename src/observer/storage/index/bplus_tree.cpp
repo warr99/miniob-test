@@ -175,11 +175,11 @@ char* LeafIndexNodeHandler::value_at(int index) {
     return __value_at(index);
 }
 
-int LeafIndexNodeHandler::lookup(KeyComparator& comparator, const char* key, bool* found /* = nullptr */) const {
+int LeafIndexNodeHandler::lookup(KeyComparator& comparator, const char* key, bool* found /* = nullptr */, int compare_count /* = -1 */) const {
     const int size = this->size();
     common::BinaryIterator<char> iter_begin(item_size(), __key_at(0));
     common::BinaryIterator<char> iter_end(item_size(), __key_at(size));
-    common::BinaryIterator<char> iter = lower_bound(iter_begin, iter_end, key, &comparator, found);
+    common::BinaryIterator<char> iter = lower_bound(iter_begin, iter_end, key, &comparator, found, compare_count);
     return iter - iter_begin;
 }
 
@@ -289,7 +289,7 @@ bool LeafIndexNodeHandler::validate(KeyComparator& comparator, DiskBufferPool* b
 
     const int node_size = size();
     for (int i = 1; i < node_size; i++) {
-        if (comparator.compare(__key_at(i - 1), __key_at(i)) >= 0) {
+        if (comparator.compare(__key_at(i - 1), __key_at(i), 1) >= 0) {
             LOG_WARN("page number = %d, invalid key order. id1=%d,id2=%d, this=%s",
                      page_num(), i - 1, i, to_string(*this).c_str());
             return false;
@@ -922,6 +922,10 @@ RC BplusTreeHandler::print_leafs() {
     return rc;
 }
 
+IndexFileHeader BplusTreeHandler::file_header() {
+    return file_header_;
+}
+
 bool BplusTreeHandler::validate_node_recursive(LatchMemo& latch_memo, Frame* frame) {
     bool result = true;
     IndexNodeHandler node(file_header_, frame);
@@ -1541,8 +1545,8 @@ RC BplusTreeHandler::delete_entry_internal(LatchMemo& latch_memo, Frame* leaf_fr
     return coalesce_or_redistribute<LeafIndexNodeHandler>(latch_memo, leaf_frame);
 }
 
-RC BplusTreeHandler::delete_entry(const char* user_keys[],int total_offset, const RID* rid) {
-    MemPoolItem::unique_ptr pkey = make_key(user_keys,total_offset,*rid);
+RC BplusTreeHandler::delete_entry(const char* user_keys[], int total_offset, const RID* rid) {
+    MemPoolItem::unique_ptr pkey = make_key(user_keys, total_offset, *rid);
     if (nullptr == pkey) {
         LOG_WARN("Failed to alloc memory for key. size=%d", file_header_.key_length);
         return RC::NOMEM;
@@ -1561,7 +1565,7 @@ RC BplusTreeHandler::delete_entry(const char* user_keys[],int total_offset, cons
         LOG_WARN("failed to find leaf page. rc =%s", strrc(rc));
         return rc;
     }
-
+    // TODO 传入一个 user_keys.size
     return delete_entry_internal(latch_memo, leaf_frame, key);
 }
 
@@ -1581,9 +1585,9 @@ RC BplusTreeScanner::open(const char* left_user_key, int left_len, bool left_inc
         LOG_WARN("tree scanner has been inited");
         return RC::INTERNAL;
     }
-
+    // 扫描器的初始化标志 inited_ 设置为 true，表示已经初始化
     inited_ = true;
-    first_emitted_ = false;
+    first_emitted_ = false;  // 将 first_emitted_ 标志设置为 false，该标志用于记录是否已经发出第一个结果
     AttrType tmpType = AttrType::UNDEFINED;
     for (int i = 0; i < tree_handler_.file_header_.attr_lengths_.size(); i++) {
         if (tmpType == AttrType::CHARS) {
@@ -1601,9 +1605,16 @@ RC BplusTreeScanner::open(const char* left_user_key, int left_len, bool left_inc
             return RC::INVALID_ARGUMENT;
         }
     }
-
+    std::vector<int32_t> attr_lengths_;
+    IndexFileHeader file_hander = tree_handler_.file_header();
+    attr_lengths_ = file_hander.attr_lengths_;
+    int size = 0;
+    for (int32_t element : attr_lengths_) {
+        size += element;
+    }
+    // 如果没有提供左边界条件
     if (nullptr == left_user_key) {
-        rc = tree_handler_.left_most_page(latch_memo_, current_frame_);
+        rc = tree_handler_.left_most_page(latch_memo_, current_frame_);  // 找到树中最左边的叶子页，并将结果存储在 current_frame_ 中
         if (rc != RC::SUCCESS) {
             LOG_WARN("failed to find left most page. rc=%s", strrc(rc));
             return rc;
@@ -1628,9 +1639,9 @@ RC BplusTreeScanner::open(const char* left_user_key, int left_len, bool left_inc
         MemPoolItem::unique_ptr left_pkey;
         const char* keys[1] = {fixed_left_key};
         if (left_inclusive) {
-            left_pkey = tree_handler_.make_key(keys, sizeof(fixed_left_key), *RID::min());
+            left_pkey = tree_handler_.make_key(keys, size, *RID::min());
         } else {
-            left_pkey = tree_handler_.make_key(keys, sizeof(fixed_left_key), *RID::max());
+            left_pkey = tree_handler_.make_key(keys, size, *RID::max());
         }
 
         const char* left_key = (const char*)left_pkey.get();
@@ -1639,7 +1650,7 @@ RC BplusTreeScanner::open(const char* left_user_key, int left_len, bool left_inc
             delete[] fixed_left_key;
             fixed_left_key = nullptr;
         }
-
+        // 使用修复后的左边界键 left_key，调用 tree_handler_.find_leaf 方法找到对应的叶子页，并将结果存储在 current_frame_ 中
         rc = tree_handler_.find_leaf(latch_memo_, BplusTreeOperationType::READ, left_key, current_frame_);
         if (rc == RC::EMPTY) {
             rc = RC::SUCCESS;
@@ -1651,8 +1662,8 @@ RC BplusTreeScanner::open(const char* left_user_key, int left_len, bool left_inc
         }
 
         LeafIndexNodeHandler left_node(tree_handler_.file_header_, current_frame_);
-        int left_index = left_node.lookup(*(tree_handler_.key_comparator_), left_key);
-        // lookup 返回的是适合插入的位置，还需要判断一下是否在合适的边界范围内
+        int left_index = left_node.lookup(*(tree_handler_.key_comparator_), left_key, nullptr, 1);  // 找到对应的叶子页
+
         if (left_index >= left_node.size()) {  // 超出了当前页，就需要向后移动一个位置
             const PageNum next_page_num = left_node.next_page();
             if (next_page_num == BP_INVALID_PAGE_NUM) {  // 这里已经是最后一页，说明当前扫描，没有数据
@@ -1693,9 +1704,9 @@ RC BplusTreeScanner::open(const char* left_user_key, int left_len, bool left_inc
         }
         const char* right_keys[1] = {fixed_right_key};
         if (right_inclusive) {
-            right_key_ = tree_handler_.make_key(right_keys, sizeof(fixed_right_key), *RID::max());
+            right_key_ = tree_handler_.make_key(right_keys, size, *RID::max());
         } else {
-            right_key_ = tree_handler_.make_key(right_keys, sizeof(fixed_right_key), *RID::min());
+            right_key_ = tree_handler_.make_key(right_keys, size, *RID::min());
         }
 
         if (fixed_right_key != right_user_key) {
@@ -1723,7 +1734,8 @@ bool BplusTreeScanner::touch_end() {
 
     LeafIndexNodeHandler node(tree_handler_.file_header_, current_frame_);
     const char* this_key = node.key_at(iter_index_);
-    int compare_result = (*(tree_handler_.key_comparator_)).compare(this_key, static_cast<char*>(right_key_.get()));
+    // TODO 比较的字段数不能写死
+    int compare_result = (*(tree_handler_.key_comparator_)).compare(this_key, static_cast<char*>(right_key_.get()), 1);  // 比较右边界是否小于左边界
     return compare_result > 0;
 }
 

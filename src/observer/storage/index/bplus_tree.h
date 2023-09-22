@@ -61,7 +61,7 @@ class AttrComparator {
         return attr_length_;
     }
 
-    int compare(const char* v1, const char* v2) {
+    int compare(const char* v1, const char* v2, int compare_count = -1) {
         switch (attr_type_) {
             case DATES:
             case INTS: {
@@ -100,7 +100,7 @@ class KeyComparator {
         return attr_comparator_;
     }
 
-    virtual int compare(const char* v1, const char* v2) {
+    virtual int compare(const char* v1, const char* v2, int compare_count = -1) {
         int result = attr_comparator_.compare(v1, v2);
         if (result != 0) {
             return result;
@@ -121,7 +121,7 @@ class KeyComparator {
  */
 class UniqueKeyComparator : public KeyComparator {
    public:
-    int compare(const char* v1, const char* v2) override {
+    int compare(const char* v1, const char* v2, int compare_count = -1) override {
         int result = attr_comparator_.compare(v1, v2);
         return result;
     }
@@ -133,16 +133,23 @@ class MultiKeyComparator : public KeyComparator {
         attr_lengths_ = attr_lengths;
         attr_types_ = attr_types;
     }
-
-    int compare(const char* v1, const char* v2) override {
+    // TODO 添加一个参数说明要比较多少个字段
+    int compare(const char* v1, const char* v2, int compare_count = -1) override {
         int result = 0;
         int offset = 0;
-        for (int i = 0; i < attr_lengths_.size(); i++) {
+        int i = 0;
+        if (compare_count == -1) {
+            compare_count = attr_lengths_.size();
+        }
+        for (; i < compare_count; i++) {
             attr_comparator_.init(attr_types_[i], attr_lengths_[i]);
             result = attr_comparator_.compare(v1 + offset, v2 + offset);
             if (result != 0) {
                 return result;
             }
+            offset += attr_lengths_[i];
+        }
+        for (; i < attr_lengths_.size(); i++) {
             offset += attr_lengths_[i];
         }
         const RID* rid1 = (const RID*)(v1 + offset);
@@ -377,7 +384,7 @@ class LeafIndexNodeHandler : public IndexNodeHandler {
      * 查找指定key的插入位置(注意不是key本身)
      * 如果key已经存在，会设置found的值。
      */
-    int lookup(KeyComparator& comparator, const char* key, bool* found = nullptr) const;
+    int lookup(KeyComparator& comparator, const char* key, bool* found = nullptr, int compare_count = -1) const;
 
     void insert(int index, const char* key, const char* value);
     void remove(int index);
@@ -506,14 +513,14 @@ class BplusTreeHandler {
      * 即向索引中插入一个值为（user_key，rid）的键值对
      * @note 这里假设user_key的内存大小与attr_length 一致
      */
-    RC insert_entry(const char* user_keys[],int total_offset ,const RID* rid);
+    RC insert_entry(const char* user_keys[], int total_offset, const RID* rid);
 
     /**
      * 从IndexHandle句柄对应的索引中删除一个值为（*pData，rid）的索引项
      * @return RECORD_INVALID_KEY 指定值不存在
      * @note 这里假设user_key的内存大小与attr_length 一致
      */
-    RC delete_entry(const char* user_keys[],int total_offset, const RID* rid);
+    RC delete_entry(const char* user_keys[], int total_offset, const RID* rid);
 
     bool is_empty() const;
 
@@ -539,6 +546,8 @@ class BplusTreeHandler {
      */
     RC print_tree();
     RC print_leafs();
+
+    IndexFileHeader file_header();
 
    private:
     /**
@@ -579,7 +588,7 @@ class BplusTreeHandler {
     RC adjust_root(LatchMemo& latch_memo, Frame* root_frame);
 
    private:
-    common::MemPoolItem::unique_ptr make_key(const char* user_keys[], int total_offset,const RID& rid);
+    common::MemPoolItem::unique_ptr make_key(const char* user_keys[], int total_offset, const RID& rid);
     void free_key(char* key);
 
    protected:
