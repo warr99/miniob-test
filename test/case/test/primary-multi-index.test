@@ -58,7 +58,6 @@ INSERT INTO multi_index3 VALUES (1, 1, 11.2, 'a', '2021-01-02', 1, 1);
 INSERT INTO multi_index3 VALUES (2, 1, 11.2, 'x', '2021-01-02', 1, 61);
 INSERT INTO multi_index3 VALUES (3, 1, 11.2, 'h', '2023-01-02', 10, 17);
 -- sort SELECT * FROM multi_index3;
-
 -- echo 6. influence of updating
 UPDATE multi_index3 SET col6=49 where id=2;
 UPDATE multi_index3 SET col4='1999-02-01' where id=2;

@@ -372,7 +372,7 @@ class IndexNodeHandler {
  */
 class LeafIndexNodeHandler : public IndexNodeHandler {
    public:
-    LeafIndexNodeHandler(const IndexFileHeader& header, Frame* frame, BplusTreeScanner* bPlusTreeScanner = nullptr);
+    LeafIndexNodeHandler(const IndexFileHeader& header, Frame* frame);
     virtual ~LeafIndexNodeHandler() = default;
 
     void init_empty();
@@ -413,7 +413,6 @@ class LeafIndexNodeHandler : public IndexNodeHandler {
 
    private:
     LeafIndexNode* leaf_node_;
-    BplusTreeScanner* bPlusTreeScanner_;
 };
 
 /**

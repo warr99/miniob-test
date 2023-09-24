@@ -149,8 +149,8 @@ bool IndexNodeHandler::validate() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-LeafIndexNodeHandler::LeafIndexNodeHandler(const IndexFileHeader& header, Frame* frame, BplusTreeScanner* bPlusTreeScanner /*= nullptr*/)
-    : IndexNodeHandler(header, frame), leaf_node_((LeafIndexNode*)frame->data()), bPlusTreeScanner_(bPlusTreeScanner) {
+LeafIndexNodeHandler::LeafIndexNodeHandler(const IndexFileHeader& header, Frame* frame)
+    : IndexNodeHandler(header, frame), leaf_node_((LeafIndexNode*)frame->data()) {
     // 在构造函数体内进行其他初始化或操作
 }
 

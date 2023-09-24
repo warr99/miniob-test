@@ -36,7 +36,6 @@ IndexScanPhysicalOperator::IndexScanPhysicalOperator(
         right_value_ = *right_value;
     }
 }
-// TODO open() need debug
 RC IndexScanPhysicalOperator::open(Trx* trx) {
     if (nullptr == table_ || nullptr == index_) {
         return RC::INTERNAL;
