@@ -31,6 +31,8 @@ See the Mulan PSL v2 for more details. */
 #include "storage/record/record_manager.h"
 #include "storage/trx/latch_memo.h"
 
+class BplusTreeScanner;
+
 /**
  * @brief B+树的实现
  * @defgroup BPlusTree
@@ -370,7 +372,7 @@ class IndexNodeHandler {
  */
 class LeafIndexNodeHandler : public IndexNodeHandler {
    public:
-    LeafIndexNodeHandler(const IndexFileHeader& header, Frame* frame);
+    LeafIndexNodeHandler(const IndexFileHeader& header, Frame* frame, BplusTreeScanner* bPlusTreeScanner = nullptr);
     virtual ~LeafIndexNodeHandler() = default;
 
     void init_empty();
@@ -411,6 +413,7 @@ class LeafIndexNodeHandler : public IndexNodeHandler {
 
    private:
     LeafIndexNode* leaf_node_;
+    BplusTreeScanner* bPlusTreeScanner_;
 };
 
 /**
@@ -630,7 +633,9 @@ class BplusTreeScanner {
      */
     RC open(const char* left_user_key, int left_len, bool left_inclusive, const char* right_user_key, int right_len, bool right_inclusive);
 
-    RC next_entry(RID& rid);
+    RC next_entry(RID& rid, bool idx_need_increase = true);
+
+    void redIdx();
 
     RC close();
 

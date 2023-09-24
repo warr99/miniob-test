@@ -149,8 +149,10 @@ bool IndexNodeHandler::validate() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-LeafIndexNodeHandler::LeafIndexNodeHandler(const IndexFileHeader& header, Frame* frame)
-    : IndexNodeHandler(header, frame), leaf_node_((LeafIndexNode*)frame->data()) {}
+LeafIndexNodeHandler::LeafIndexNodeHandler(const IndexFileHeader& header, Frame* frame, BplusTreeScanner* bPlusTreeScanner /*= nullptr*/)
+    : IndexNodeHandler(header, frame), leaf_node_((LeafIndexNode*)frame->data()), bPlusTreeScanner_(bPlusTreeScanner) {
+    // 在构造函数体内进行其他初始化或操作
+}
 
 void LeafIndexNodeHandler::init_empty() {
     IndexNodeHandler::init_empty(true);
@@ -196,6 +198,9 @@ void LeafIndexNodeHandler::remove(int index) {
     if (index < size() - 1) {
         memmove(__item_at(index), __item_at(index + 1), (size() - index - 1) * item_size());
     }
+    // if (this->bPlusTreeScanner_ != nullptr) {
+    //     bPlusTreeScanner_->redIdx();
+    // }
     increase_size(-1);
 }
 
@@ -1738,8 +1743,11 @@ bool BplusTreeScanner::touch_end() {
     int compare_result = (*(tree_handler_.key_comparator_)).compare(this_key, static_cast<char*>(right_key_.get()), 1);  // 比较右边界是否小于左边界
     return compare_result > 0;
 }
+void BplusTreeScanner ::redIdx() {
+    this->iter_index_--;
+}
 
-RC BplusTreeScanner::next_entry(RID& rid) {
+RC BplusTreeScanner::next_entry(RID& rid, bool idx_need_increase) {
     if (nullptr == current_frame_) {
         return RC::RECORD_EOF;
     }
@@ -1750,8 +1758,9 @@ RC BplusTreeScanner::next_entry(RID& rid) {
         return RC::SUCCESS;
     }
 
-    iter_index_++;
-
+    if (idx_need_increase) {
+        iter_index_++;
+    }
     LeafIndexNodeHandler node(tree_handler_.file_header_, current_frame_);
     if (iter_index_ < node.size()) {
         if (touch_end()) {

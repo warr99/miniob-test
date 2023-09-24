@@ -14,58 +14,59 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
-#include "sql/operator/physical_operator.h"
 #include "sql/expr/tuple.h"
+#include "sql/operator/physical_operator.h"
 #include "storage/record/record_manager.h"
 
 /**
  * @brief 索引扫描物理算子
  * @ingroup PhysicalOperator
  */
-class IndexScanPhysicalOperator : public PhysicalOperator
-{
-public:
-  IndexScanPhysicalOperator(Table *table, Index *index, bool readonly, 
-      const Value *left_value, bool left_inclusive,
-      const Value *right_value, bool right_inclusive);
+class IndexScanPhysicalOperator : public PhysicalOperator {
+   public:
+    IndexScanPhysicalOperator(Table* table, Index* index, bool readonly, const Value* left_value, bool left_inclusive, const Value* right_value, bool right_inclusive);
 
-  virtual ~IndexScanPhysicalOperator() = default;
+    virtual ~IndexScanPhysicalOperator() = default;
 
-  PhysicalOperatorType type() const override
-  {
-    return PhysicalOperatorType::INDEX_SCAN;
-  }
+    PhysicalOperatorType type() const override {
+        return PhysicalOperatorType::INDEX_SCAN;
+    }
 
-  std::string param() const override;
+    std::string param() const override;
 
-  RC open(Trx *trx) override;
-  RC next() override;
-  RC close() override;
+    RC open(Trx* trx) override;
+    RC next() override;
+    RC close() override;
 
-  Tuple *current_tuple() override;
+    Tuple* current_tuple() override;
+    void set_idx_need_increase(bool idx_need_increase);
 
-  void set_predicates(std::vector<std::unique_ptr<Expression>> &&exprs);
+    const bool get_idx_need_increase();
 
-private:
-  // 与TableScanPhysicalOperator代码相同，可以优化
-  RC filter(RowTuple &tuple, bool &result);
+    void set_predicates(std::vector<std::unique_ptr<Expression>>&& exprs);
 
-private:
-  Trx * trx_ = nullptr;
-  Table *table_ = nullptr;
-  Index *index_ = nullptr;
-  bool readonly_ = false;
-  IndexScanner *index_scanner_ = nullptr;
-  RecordFileHandler *record_handler_ = nullptr;
+   private:
+    // 与TableScanPhysicalOperator代码相同，可以优化
+    RC filter(RowTuple& tuple, bool& result);
 
-  RecordPageHandler record_page_handler_;
-  Record current_record_;
-  RowTuple tuple_;
+   private:
+    Trx* trx_ = nullptr;
+    Table* table_ = nullptr;
+    Index* index_ = nullptr;
+    bool readonly_ = false;
+    IndexScanner* index_scanner_ = nullptr;
+    RecordFileHandler* record_handler_ = nullptr;
+    // 需不需要增加 index(索引被删除时不需要)
+    bool idx_need_increase_ = true;
 
-  Value left_value_;
-  Value right_value_;
-  bool left_inclusive_ = false;
-  bool right_inclusive_ = false;
+    RecordPageHandler record_page_handler_;
+    Record current_record_;
+    RowTuple tuple_;
 
-  std::vector<std::unique_ptr<Expression>> predicates_;
+    Value left_value_;
+    Value right_value_;
+    bool left_inclusive_ = false;
+    bool right_inclusive_ = false;
+
+    std::vector<std::unique_ptr<Expression>> predicates_;
 };

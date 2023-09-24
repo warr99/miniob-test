@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 
 #include "sql/operator/physical_operator.h"
+#include "sql/operator/index_scan_physical_operator.h"
 
 class Trx;
 class DeleteStmt;

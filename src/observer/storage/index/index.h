@@ -80,7 +80,7 @@ class Index {
     virtual RC sync() = 0;
 
    protected:
-    RC init(const IndexMeta &index_meta, std::vector<FieldMeta> field_metas);
+    RC init(const IndexMeta& index_meta, std::vector<FieldMeta> field_metas);
 
    protected:
     IndexMeta index_meta_;  ///< 索引的元数据
@@ -100,6 +100,6 @@ class IndexScanner {
      * 遍历元素数据
      * 如果没有更多的元素，返回RECORD_EOF
      */
-    virtual RC next_entry(RID* rid) = 0;
+    virtual RC next_entry(RID* rid, bool idx_need_increase = true) = 0;
     virtual RC destroy() = 0;
 };

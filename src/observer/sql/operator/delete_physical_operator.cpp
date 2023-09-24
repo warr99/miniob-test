@@ -57,6 +57,10 @@ RC DeletePhysicalOperator::next() {
             LOG_WARN("failed to delete record: %s", strrc(rc));
             return rc;
         }
+        IndexScanPhysicalOperator* indexScanOperator = dynamic_cast<IndexScanPhysicalOperator*>(child);
+        if (indexScanOperator != nullptr) {
+            indexScanOperator->set_idx_need_increase(false);
+        }
     }
 
     return RC::RECORD_EOF;
