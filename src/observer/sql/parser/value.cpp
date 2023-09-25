@@ -19,11 +19,11 @@ See the Mulan PSL v2 for more details. */
 #include "common/log/log.h"
 #include "common/util/date.h"
 #include "storage/field/field.h"
-
-const char* ATTR_TYPE_NAME[] = {"undefined", "chars", "ints", "floats", "booleans", "date","multi"};
+// TODO add text
+const char* ATTR_TYPE_NAME[] = {"undefined", "chars", "ints", "floats", "booleans", "date","multi","text"};
 
 const char* attr_type_to_string(AttrType type) {
-    if (type >= UNDEFINED && type <= MULTI) {
+    if (type >= UNDEFINED && type <= TEXTS) {
         return ATTR_TYPE_NAME[type];
     }
     return "unknown";
@@ -128,6 +128,17 @@ void Value::set_value(const Value& value) {
             ASSERT(false, "got an invalid value type");
         } break;
     }
+}
+
+void Value::set_text(const char* s, int len /*= 0*/) {
+    attr_type_ = TEXTS;
+    if (len > 0) {
+        len = strnlen(s, len);
+        str_value_.assign(s, len);
+    } else {
+        str_value_.assign(s);
+    }
+    length_ = str_value_.length();
 }
 
 const char* Value::data() const {

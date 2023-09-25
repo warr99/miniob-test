@@ -28,6 +28,7 @@ enum AttrType {
     BOOLEANS,  ///< boolean类型，当前不是由parser解析出来的，是程序内部使用的
     DATES,     ///< 日期类型
     MULTI,     ///< 联合索引(包含多种类型)
+    TEXTS,
 };
 
 const char* attr_type_to_string(AttrType type);
@@ -67,6 +68,7 @@ class Value {
     void set_string(const char* s, int len = 0);
     void set_value(const Value& value);
     void set_date(int date);
+    void set_text(const char* s, int len = 0);
 
     std::string to_string() const;
 
