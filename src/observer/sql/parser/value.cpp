@@ -20,7 +20,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/util/date.h"
 #include "storage/field/field.h"
 // TODO add text
-const char* ATTR_TYPE_NAME[] = {"undefined", "chars", "ints", "floats", "booleans", "date","multi","text"};
+const char* ATTR_TYPE_NAME[] = {"undefined", "chars", "ints", "floats", "booleans", "date", "multi", "text"};
 
 const char* attr_type_to_string(AttrType type) {
     if (type >= UNDEFINED && type <= TEXTS) {
@@ -55,6 +55,7 @@ Value::Value(const char* s, int len /*= 0*/) {
 
 void Value::set_data(char* data, int length) {
     switch (attr_type_) {
+        case TEXTS:
         case CHARS: {
             set_string(data, length);
         } break;
@@ -124,26 +125,25 @@ void Value::set_value(const Value& value) {
         case BOOLEANS: {
             set_boolean(value.get_boolean());
         } break;
+        case TEXTS: {
+            set_text(value.get_string().c_str());
+        }
         case UNDEFINED: {
             ASSERT(false, "got an invalid value type");
         } break;
     }
 }
 
-void Value::set_text(const char* s, int len /*= 0*/) {
+void Value::set_text(const char* s) {
     attr_type_ = TEXTS;
-    if (len > 0) {
-        len = strnlen(s, len);
-        str_value_.assign(s, len);
-    } else {
-        str_value_.assign(s);
-    }
+    str_value_.assign(s);
     length_ = str_value_.length();
 }
 
 const char* Value::data() const {
     switch (attr_type_) {
-        case CHARS: {
+        case CHARS:
+        case TEXTS: {
             return str_value_.c_str();
         } break;
         default: {
@@ -169,7 +169,8 @@ std::string Value::to_string() const {
         case BOOLEANS: {
             os << num_value_.bool_value_;
         } break;
-        case CHARS: {
+        case CHARS:
+        case TEXTS: {
             os << str_value_;
         } break;
         default: {
@@ -182,8 +183,8 @@ std::string Value::to_string() const {
 int Value::compare(const Value& other) const {
     if (this->attr_type_ == other.attr_type_) {
         switch (this->attr_type_) {
-            case INTS: 
-            case DATES:{
+            case INTS:
+            case DATES: {
                 return common::compare_int((void*)&this->num_value_.int_value_, (void*)&other.num_value_.int_value_);
             } break;
             case FLOATS: {
@@ -220,6 +221,7 @@ int Value::compare(const Value& other) const {
 
 int Value::get_int() const {
     switch (attr_type_) {
+        case TEXTS:
         case CHARS: {
             try {
                 return (int)(std::stol(str_value_));
@@ -247,6 +249,7 @@ int Value::get_int() const {
 
 float Value::get_float() const {
     switch (attr_type_) {
+        case TEXTS:
         case CHARS: {
             try {
                 return std::stof(str_value_);
@@ -278,6 +281,7 @@ std::string Value::get_string() const {
 
 bool Value::get_boolean() const {
     switch (attr_type_) {
+        case TEXTS:
         case CHARS: {
             try {
                 float val = std::stof(str_value_);
@@ -315,22 +319,23 @@ bool Value::get_boolean() const {
 }
 
 int Value::get_date() const {
-  switch (attr_type_)
-  {
-  case INTS: case DATES: {
-    return num_value_.int_value_;
-  }break;
-  case CHARS: {
-    int32_t date = -1;
-    RC rc = string_to_date(str_value_.c_str(), date);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("Failed to convert data type. str=%s, target_type=%s", str_value_, "DATES");
+    switch (attr_type_) {
+        case INTS:
+        case DATES: {
+            return num_value_.int_value_;
+        } break;
+        case TEXTS:
+        case CHARS: {
+            int32_t date = -1;
+            RC rc = string_to_date(str_value_.c_str(), date);
+            if (rc != RC::SUCCESS) {
+                LOG_WARN("Failed to convert data type. str=%s, target_type=%s", str_value_, "DATES");
+            }
+            return date;
+        } break;
+        default: {
+            LOG_WARN("unknown data type. type=%d", attr_type_);
+            return 0;
+        } break;
     }
-    return date;
-  }break;
-  default: {
-      LOG_WARN("unknown data type. type=%d", attr_type_);
-      return 0;
-  }break;
-  }
 }

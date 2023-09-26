@@ -68,7 +68,7 @@ class Value {
     void set_string(const char* s, int len = 0);
     void set_value(const Value& value);
     void set_date(int date);
-    void set_text(const char* s, int len = 0);
+    void set_text(const char* s);
 
     std::string to_string() const;
 

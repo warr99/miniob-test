@@ -15,8 +15,8 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 
 #include <functional>
-#include "storage/table/table_meta.h"
 #include "storage/index/index_type.h"
+#include "storage/table/table_meta.h"
 
 struct RID;
 class Record;
@@ -85,7 +85,7 @@ class Table {
     RC delete_record(const Record& record);
     RC visit_record(const RID& rid, bool readonly, std::function<void(Record&)> visitor);
     RC get_record(const RID& rid, Record& record);
-    RC update_record(Record& record, Value& value, int offset);
+    RC update_record(Record& record, Value& value, int offset, int len = -1);
 
     RC recover_insert_record(Record& record);
 

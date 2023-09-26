@@ -186,7 +186,7 @@ class RecordPageHandler {
      */
     RC get_record(const RID* rid, Record* rec);
 
-    RC update_record(int offset, Value& value, RID* rid);
+    RC update_record(int offset, Value& value, RID* rid, int len);
 
     /**
      * @brief 返回该记录页的页号
@@ -275,7 +275,7 @@ class RecordFileHandler {
     /**
      * @brief 更新一个记录
      */
-    RC update_record(int offset, Value& value, RID* rid);
+    RC update_record(int offset, Value& value, RID* rid, int len);
 
     /**
      * @brief 数据库恢复时，在指定文件指定位置插入数据

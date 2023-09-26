@@ -51,8 +51,9 @@ RC UpdatePhysicalOperator::next() {
         
 
         int offset = feildmeta->offset();
+        int len = feildmeta->len();
 
-        rc = trx_->update_record(table_, record, value_, offset);
+        rc = trx_->update_record(table_, record, value_, offset,len);
         if (rc != RC::SUCCESS) {
             LOG_WARN("failed to delete record: %s", strrc(rc));
             return rc;

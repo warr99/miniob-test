@@ -45,6 +45,7 @@ RC ResolveStage::handle_request(SQLStageEvent *sql_event)
   // 获取经过Parser模块转化而成的ParsedSqlNode，转化成stmt
   ParsedSqlNode *sql_node = sql_event->sql_node().get();
   Stmt *stmt = nullptr;
+
   rc = Stmt::create_stmt(db, *sql_node, stmt);
   if (rc != RC::SUCCESS && rc != RC::UNIMPLENMENT) {
     LOG_WARN("failed to create stmt. rc=%d:%s", rc, strrc(rc));

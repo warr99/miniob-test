@@ -72,6 +72,8 @@ RC UpdateStmt::create(Db* db, const UpdateSqlNode& update, Stmt*& stmt) {
                         return rc;
                     }
                     value.set_date(date);
+                } else if (field_type == TEXTS && value_type == CHARS) {
+                    value.set_text(value.data());
                 } else {
                     LOG_WARN("field type mismatch. table=%s, field=%s, field type=%d, value_type=%d",
                              table_name, field_meta->name(), field_type, value_type);

@@ -274,7 +274,7 @@ RC RecordPageHandler::get_record(const RID* rid, Record* rec) {
     return RC::SUCCESS;
 }
 
-RC RecordPageHandler::update_record(int offset,  Value& value,  RID* rid) {
+RC RecordPageHandler::update_record(int offset, Value& value, RID* rid, int len) {
     ASSERT(readonly_ == false, "cannot delete record from page while the page is readonly");
 
     if (rid->slot_num >= page_header_->record_capacity) {
@@ -291,7 +291,10 @@ RC RecordPageHandler::update_record(int offset,  Value& value,  RID* rid) {
     // 找到要修改的位置
     char* change_loc = (char*)((uint64_t)(src_data) + offset);
     const char* data = value.data();
-    memcpy(change_loc, data, value.length());
+    if (len == -1) {
+        len = value.length();
+    }
+    memcpy(change_loc, data, len);
     // 标为脏页,刷回磁盘
     frame_->mark_dirty();
     return RC::SUCCESS;
@@ -429,7 +432,7 @@ RC RecordFileHandler::insert_record(const char* data, int record_size, RID* rid)
     return record_page_handler.insert_record(data, rid);
 }
 
-RC RecordFileHandler::update_record(int offset, Value& value, RID* rid) {
+RC RecordFileHandler::update_record(int offset, Value& value, RID* rid, int len) {
     RC rc = RC::SUCCESS;
 
     RecordPageHandler page_handler;
@@ -438,7 +441,7 @@ RC RecordFileHandler::update_record(int offset, Value& value, RID* rid) {
         return rc;
     }
 
-    rc = page_handler.update_record(offset, value, rid);
+    rc = page_handler.update_record(offset, value, rid, len);
 
     return rc;
 }

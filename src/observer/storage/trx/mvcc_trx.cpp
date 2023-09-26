@@ -170,7 +170,7 @@ RC MvccTrx::delete_record(Table* table, Record& record) {
     return RC::SUCCESS;
 }
 
-RC MvccTrx::update_record(Table* table, Record& record, Value& value, int offset) {
+RC MvccTrx::update_record(Table* table, Record& record, Value& value, int len, int offset) {
     // 获取记录的开始版本和结束版本字段
     Field begin_field;
     Field end_field;
@@ -187,7 +187,7 @@ RC MvccTrx::update_record(Table* table, Record& record, Value& value, int offset
 
     // TODO 执行记录的更新
     RC rc = RC::SUCCESS;
-    rc = table->update_record(record, value, offset);
+    rc = table->update_record(record, value, offset, len);
 
     // 记录更新后，可以选择将新版本的结束版本设置为当前事务ID
     end_field.set_int(record, -trx_id_);

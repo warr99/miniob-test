@@ -219,9 +219,9 @@ RC Table::insert_record(Record& record) {
     return rc;
 }
 
-RC Table::update_record(Record& record, Value& value, int offset) {
+RC Table::update_record(Record& record, Value& value, int offset, int len) {
     RC rc = RC::SUCCESS;
-    rc = record_handler_->update_record(offset, value, &record.rid());
+    rc = record_handler_->update_record(offset, value, &record.rid(), len);
     if (rc != RC::SUCCESS) {
         LOG_ERROR("Update record failed. table name=%s, rc=%s", table_meta_.name(), strrc(rc));
         return rc;
@@ -314,12 +314,12 @@ RC Table::make_record(int value_num, const Value* values, Record& record) {
         const FieldMeta* field = table_meta_.field(i + normal_field_start_index);
         const Value& value = values[i];
         size_t copy_len = field->len();
-        if (field->type() == CHARS) {
+        if (field->type() == CHARS || field->type() == TEXTS) {
             const size_t data_len = value.length();
             if (copy_len > data_len) {
                 copy_len = data_len + 1;
             }
-        }
+        }  // TODO
         memcpy(record_data + field->offset(), value.data(), copy_len);
     }
 

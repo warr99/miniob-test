@@ -63,9 +63,11 @@ RC InsertStmt::create(Db* db, const InsertSqlNode& inserts, Stmt*& stmt) {
                     LOG_TRACE("transform to date fail,%d", values[i].data());
                     return rc;
                 }
-                // TODO
                 Value* value = const_cast<Value*>(&inserts.values[i]);
                 value->set_date(date);
+            } else if (field_type == TEXTS && value_type == CHARS) {
+                Value* value = const_cast<Value*>(&inserts.values[i]);
+                value->set_text(values[i].data());
             } else {
                 LOG_WARN("field type mismatch. table=%s, field=%s, field type=%d, value_type=%d",
                          table_name, field_meta->name(), field_type, value_type);
