@@ -136,7 +136,12 @@ void Value::set_value(const Value& value) {
 
 void Value::set_text(const char* s) {
     attr_type_ = TEXTS;
-    str_value_.assign(s);
+    // 截断输入字符串为不超过 4096 个字符
+    if (strlen(s) > 4096) {
+        str_value_.assign(s, 4096);
+    } else {
+        str_value_.assign(s);
+    }
     length_ = str_value_.length();
 }
 
