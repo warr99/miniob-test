@@ -24,7 +24,7 @@ UpdateStmt::UpdateStmt(Table* table, Value* values, int value_amount, FilterStmt
     : table_(table), values_(values), value_amount_(value_amount), filter_stmt_(filter_stmt), attribute_name_(attribute_name) {}
 
 RC UpdateStmt::create(Db* db, const UpdateSqlNode& update, Stmt*& stmt) {
-    // TODO
+
     const char* table_name = update.relation_name.c_str();
     if (nullptr == db || nullptr == table_name || update.attribute_name.empty()) {
         LOG_WARN("invalid argument. db=%p, table_name=%p", db, table_name);
@@ -47,8 +47,7 @@ RC UpdateStmt::create(Db* db, const UpdateSqlNode& update, Stmt*& stmt) {
         LOG_WARN("failed to create filter statement. rc=%d:%s", rc, strrc(rc));
         return rc;
     }
-
-    Value value = update.value;
+    Value &value = const_cast<Value &>(update.value);
     const TableMeta& table_meta = table->table_meta();
 
     // 检查插入的字段
