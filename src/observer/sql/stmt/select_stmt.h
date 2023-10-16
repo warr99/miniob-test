@@ -57,9 +57,14 @@ public:
   {
     return filter_stmt_;
   }
+  FilterStmt *inner_join_filter_stmt() const
+  {
+    return inner_join_filter_stmt_;
+  }
 
 private:
   std::vector<Field> query_fields_;
   std::vector<Table *> tables_;
   FilterStmt *filter_stmt_ = nullptr;
+  FilterStmt *inner_join_filter_stmt_ = nullptr;
 };

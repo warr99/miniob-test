@@ -135,10 +135,20 @@ RC SelectStmt::create(Db* db, const SelectSqlNode& select_sql, Stmt*& stmt) {
     }
 
     // TODO create filter statement in `inner join on` statement
-    
+    FilterStmt *inner_join_filter_stmt = nullptr;
+    RC rc = FilterStmt::create(db,
+                               default_table,
+                               &table_map,
+                               select_sql.join_conditions.data(),
+                               static_cast<int>(select_sql.join_conditions.size()),
+                               inner_join_filter_stmt); 
+    if (rc != RC::SUCCESS) {
+        LOG_WARN("cannot construct inner join filter stmt");
+        return rc;
+    }
     // create filter statement in `where` statement
     FilterStmt* filter_stmt = nullptr;
-    RC rc = FilterStmt::create(db,
+    rc = FilterStmt::create(db,
                                default_table,
                                &table_map,
                                select_sql.conditions.data(),
@@ -155,6 +165,7 @@ RC SelectStmt::create(Db* db, const SelectSqlNode& select_sql, Stmt*& stmt) {
     select_stmt->tables_.swap(tables);
     select_stmt->query_fields_.swap(query_fields);
     select_stmt->filter_stmt_ = filter_stmt;
+    select_stmt->inner_join_filter_stmt_ = inner_join_filter_stmt;
     stmt = select_stmt;
     return RC::SUCCESS;
 }
