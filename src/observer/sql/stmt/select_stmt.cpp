@@ -107,7 +107,9 @@ RC SelectStmt::create(Db* db, const SelectSqlNode& select_sql, Stmt*& stmt) {
                     query_fields.push_back(Field(table, field_meta));
                 }
             }
-        } else {
+        } 
+        // TODO 这个分支貌似没什么用
+        else {
             // 暂时不接受表超过一个的情况
             if (tables.size() != 1) {
                 LOG_WARN("invalid. I do not know the attr's table. attr=%s", relation_attr.attribute_name.c_str());
@@ -132,6 +134,8 @@ RC SelectStmt::create(Db* db, const SelectSqlNode& select_sql, Stmt*& stmt) {
         default_table = tables[0];
     }
 
+    // TODO create filter statement in `inner join on` statement
+    
     // create filter statement in `where` statement
     FilterStmt* filter_stmt = nullptr;
     RC rc = FilterStmt::create(db,

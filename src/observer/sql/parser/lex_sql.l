@@ -94,6 +94,8 @@ ON                                      RETURN_TOKEN(ON);
 SHOW                                    RETURN_TOKEN(SHOW);
 SYNC                                    RETURN_TOKEN(SYNC);
 SELECT                                  RETURN_TOKEN(SELECT);
+INNER                                   RETURN_TOKEN(INNER);
+JOIN                                    RETURN_TOKEN(JOIN);
 CALC                                    RETURN_TOKEN(CALC);
 FROM                                    RETURN_TOKEN(FROM);
 WHERE                                   RETURN_TOKEN(WHERE);

@@ -27,3 +27,7 @@ GTAGS
 docs/book
 ./.vscode
 observe.log.*
+observer.log.*
+clog
+*.data
+*.table
