@@ -92,27 +92,36 @@ RC LogicalPlanGenerator::create_plan(
                 fields.push_back(field);
             }
         }
-
+        // 表示从表格中检索数据的逻辑操作符,
         unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, fields, true /*readonly*/));
-        if (table_oper == nullptr) {
+        if (table_oper == nullptr) { // 第一个表
             table_oper = std::move(table_get_oper);
-        } else {
+        } else { // 如果进入了这个分支说明不止一个表, 添加 join 逻辑操作符
             JoinLogicalOperator* join_oper = new JoinLogicalOperator;
             join_oper->add_child(std::move(table_oper));
             join_oper->add_child(std::move(table_get_oper));
-            table_oper = unique_ptr<LogicalOperator>(join_oper);
+            // TODO 
+            // 为每一个 join_oper 添加谓词操作符 -> t1 inner join t2 on t1.id = t2.id 其中的 t1.id = t2.id
+            // 来自 select_stmt->inner_join_filter_stmt_
+            table_oper = unique_ptr<LogicalOperator>(join_oper); // table_oper 更新为指向连接操作 join_oper 的 unique_ptr，这意味着 table_oper 现在表示了两个表格的连接操作
         }
+        //     new JoinLogicalOperator                 <- table_oper (2)
+        //          /              \              
+        // table_get_oper  new JoinLogicalOperator     <- table_oper (1)
+        //                      /             \
+        //                 table_oper       table_get_oper
+    
     }
-
+    // 谓词操作符 -> where
     unique_ptr<LogicalOperator> predicate_oper;
     RC rc = create_plan(select_stmt->filter_stmt(), predicate_oper);
     if (rc != RC::SUCCESS) {
         LOG_WARN("failed to create predicate logical plan. rc=%s", strrc(rc));
         return rc;
     }
-
+    // 投影操作符 -> select id,name ... 中的 id,name
     unique_ptr<LogicalOperator> project_oper(new ProjectLogicalOperator(all_fields));
-    if (predicate_oper) {
+    if (predicate_oper) { // 存在 where
         if (table_oper) {
             predicate_oper->add_child(std::move(table_oper));
         }

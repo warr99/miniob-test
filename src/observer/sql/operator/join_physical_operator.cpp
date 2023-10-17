@@ -37,14 +37,14 @@ RC NestedLoopJoinPhysicalOperator::open(Trx *trx)
 
 RC NestedLoopJoinPhysicalOperator::next()
 {
-  bool left_need_step = (left_tuple_ == nullptr);
+  bool left_need_step = (left_tuple_ == nullptr); // 如果左表当前的记录为 null ，需要获取下一条记录
   RC rc = RC::SUCCESS;
-  if (round_done_) {
+  if (round_done_) { // 如果右表遍历一轮结束了
     left_need_step = true;
   } else {
-    rc = right_next();
+    rc = right_next(); // 左表不需要next,右表获取下一条记录
     if (rc != RC::SUCCESS) {
-      if (rc == RC::RECORD_EOF) {
+      if (rc == RC::RECORD_EOF) { // 如果右表已经获取到最后一条记录
         left_need_step = true;
       } else {
         return rc;
@@ -54,15 +54,20 @@ RC NestedLoopJoinPhysicalOperator::next()
     }
   }
 
-  if (left_need_step) {
-    rc = left_next();
+  if (left_need_step) { 
+    rc = left_next(); // 获取左表的下一条记录
     if (rc != RC::SUCCESS) {
       return rc;
     }
   }
-
-  rc = right_next();
+  rc = right_next(); // 获取右表的下一条记录
   return rc;
+  //-------------------------
+  // 如果是第一次获取数据
+  // fetch_right_table() -> 获取整个右表的数据 -> 缓存到 std::vector<CompoundRecord> 中
+  // 如果不是第一次获取数据
+  // 左表需要 next (右表的迭代器遍历到了最后)-> 在缓存中取到整个右表的数据并且进行过滤 filter_right_table()
+  // 左表不需要 next -> tuple_.set_right_record();
 }
 
 RC NestedLoopJoinPhysicalOperator::close()

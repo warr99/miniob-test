@@ -53,4 +53,11 @@ private:
   JoinedTuple joined_tuple_;  //! 当前关联的左右两个tuple
   bool round_done_ = true;    //! 右表遍历的一轮是否结束
   bool right_closed_ = true;  //! 右表算子是否已经关闭
+
+  // TODO 
+  // bool is_first_ : 标识是否第一次获取数据
+  // std::vector<CompoundRecord> : 缓存右表所有的数据
+  // std::vector<size_t> : 存储过滤之后符合条件的记录的下标
+  // 
+
 };
